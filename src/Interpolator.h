@@ -1,7 +1,7 @@
 #ifndef __INTERPOLATOR__
 #define __INTERPOLATOR__
 
-#include "misc.h"
+#include <bbcat-base/misc.h>
 
 BBC_AUDIOTOOLBOX_START
 

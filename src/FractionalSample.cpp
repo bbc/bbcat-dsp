@@ -5,7 +5,8 @@
 #include <math.h>
 
 #define DEBUG_LEVEL 2
-#include "misc.h"
+#include <bbcat-base/misc.h>
+
 #include "FractionalSample.h"
 
 BBC_AUDIOTOOLBOX_START

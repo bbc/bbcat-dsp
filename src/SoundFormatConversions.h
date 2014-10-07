@@ -13,7 +13,7 @@
  *
  */
 /*--------------------------------------------------------------------------------*/
-#include "misc.h"
+#include <bbcat-base/misc.h>
 
 BBC_AUDIOTOOLBOX_START
 

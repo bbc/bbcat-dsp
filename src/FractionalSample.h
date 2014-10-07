@@ -1,7 +1,7 @@
 #ifndef __FRACTIONAL_SAMPLE__
 #define __FRACTIONAL_SAMPLE__
 
-#include "misc.h"
+#include <bbcat-base/misc.h>
 
 BBC_AUDIOTOOLBOX_START
 

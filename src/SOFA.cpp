@@ -479,7 +479,7 @@ SOFA::positions_array_t SOFA::get_position_var_data(const std::string position_v
     for (uint_t ii = 0; ii < count[0]; ii++)
     {
       pos_var_data[ii].polar = (coord_type == "spherical");
-      // SOFA uses different cartesian system to aplibs and ADM
+      // SOFA uses different cartesian system to bbcat and ADM
       if (!pos_var_data[ii].polar)
       {
         pos_var_data[ii].pos.x = -pos_raw[ii*count[1] + 1];

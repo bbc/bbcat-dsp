@@ -13,8 +13,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#include "misc.h"
-#include "ThreadLock.h"
+#include <bbcat-base/misc.h>
+#include <bbcat-base/ThreadLock.h>
 #if ENABLE_SOFA
 #include "SOFA.h"
 #endif

@@ -11,8 +11,8 @@
 #include <vector>
 #include <string>
 
-#include "misc.h"
-#include "3DPosition.h"
+#include <bbcat-base/misc.h>
+#include <bbcat-base/3DPosition.h>
 
 namespace netCDF
 {

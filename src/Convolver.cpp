@@ -17,10 +17,11 @@
 #include <apf/convolver.h>
 
 #define DEBUG_LEVEL 2
+#include <bbcat-base/PerformanceMonitor.h>
+
 #include "Convolver.h"
 #include "SoundFormatConversions.h"
 #include "FractionalSample.h"
-#include "PerformanceMonitor.h"
 
 // set at 1 to output whether each convolver is processing every 2s
 #define DEBUG_CONVOLVER_STATES   0
