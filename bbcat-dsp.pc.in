@@ -9,5 +9,5 @@ Name: bbcat-dsp-@BBCAT_DSP_MAJORMINOR@
 Description: Diginal signal processing library
 Requires.private: @BBCAT_DSP_PKG_DEPS@
 Version: @VERSION@
-Libs: -L${libdir} -lap-dsp-@BBCAT_DSP_MAJORMINOR@ @BBCAT_GLOBAL_LIBS@
+Libs: -L${libdir} -lbbcat-dsp-@BBCAT_DSP_MAJORMINOR@ @BBCAT_GLOBAL_LIBS@
 Cflags: -I${includedir} @BBCAT_GLOBAL_CFLAGS@
