@@ -127,8 +127,8 @@ void MixSamples(const Sample_t *src,
       interp.NonZero())
   {
     // restrict input data to sensible values
-    src_channel = MIN(src_channel, src_channels - 1);
-    dst_channel = MIN(dst_channel, dst_channels - 1);
+    src_channel = MIN(src_channel, src_channels);
+    dst_channel = MIN(dst_channel, dst_channels);
 
     nchannels   = MIN(nchannels,   src_channels - src_channel);
     nchannels   = MIN(nchannels,   dst_channels - dst_channel);
