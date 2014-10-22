@@ -18,14 +18,16 @@ typedef struct SOFA::_sofa_dims_t
 } sofa_dims_t;
 
 SOFA::SOFA(const std::string& filename) :
+  sofa_dims(NULL),
+  sofa_file(NULL),
   sample_rate(0.f)
 {
-  sofa_dims = new sofa_dims_t;
   try
   {
     // Open the file and check to make sure it's valid.
     DEBUG2(("Creating SOFA with filename: %s", filename.c_str()));
     sofa_file = new sofa_file_t(filename.c_str(), sofa_file_t::read);
+    sofa_dims = new sofa_dims_t;
 
     sofa_att_collection_t sofa_atts = sofa_file->getAtts();
 
@@ -74,13 +76,14 @@ SOFA::SOFA(const std::string& filename) :
   catch (netCDF::exceptions::NcException& e)
   {
     ERROR("NetCDF error: %s", e.what());
+    sofa_file = NULL;
   }
 }
 
 SOFA::~SOFA()
 {
-  delete sofa_file;
-  delete sofa_dims;
+  if (sofa_dims) delete sofa_dims;
+  if (sofa_file) delete sofa_file;
 }
 
 std::string SOFA::get_convention_name() const
