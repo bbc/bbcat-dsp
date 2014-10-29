@@ -136,7 +136,8 @@ void MixSamples(const Sample_t *src,
     // final sanity check
     if (!nchannels) return;
 
-    if ((nchannels == src_channels) && (nchannels == dst_channels))
+    // note the extra condition, this optimization CANNOT be used if the interpolator is not at its target!
+    if ((nchannels == src_channels) && (nchannels == dst_channels) && interp.AtTarget())
     {
       // optimization: if source and destination samples are all contiguous, reduce the process to a single frame of many channels
       nchannels *= nframes;
