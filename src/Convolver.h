@@ -158,7 +158,7 @@ public:
   /** Set IR delays (in seconds)
    */
   /*--------------------------------------------------------------------------------*/
-  void SetIRDelays(const double *delays, const uint_t num_delays);
+  void SetIRDelays(const double *delays_dynamic, const uint_t num_delays, const double *delays_static);
 
   typedef struct {
     double             samplerate;
@@ -325,7 +325,8 @@ protected:
   uint_t                   partitions;
   std::vector<Convolver *> convolvers;
   std::vector<APFFilter>   filters;
-  std::vector<double>      irdelays;
+  typedef std::pair<double, double>             dynamic_static_delay_pair_t;
+  std::vector<dynamic_static_delay_pair_t>      irdelays;
   std::vector<PARAMETERS>  parameters;
   double                   delayscale;
   double                   maxdelay;

@@ -429,7 +429,13 @@ bool ConvolverManager::LoadIRsSndFile(const char *filename, const FILTER_FADE& f
 }
 
 /*--------------------------------------------------------------------------------*/
-/** Load IR delays from text file
+/** Load IR delays from text file.
+ * @note A static delay component that is not affected by the delay scaling
+ * parameter can be specified using two floating point values per line:
+ * %lf %fl -> "dynamic delay" "static delay"
+ * @note We don't determine static delay from the mean here as we do in LoadDelaysSOFA
+ * because there is no way of knowing whether this is valid i.e. they could be IRs for
+ * multiple speakers, which may not have the same mean time-of-arrival.
  */
 /*--------------------------------------------------------------------------------*/
 void ConvolverManager::LoadIRDelays(const char *filename)
@@ -445,28 +451,12 @@ void ConvolverManager::LoadIRDelays(const char *filename)
 
     if ((fp = fopen(filename, "r")) != NULL)
     {
-      double mindelay = 0.0;  // used to reduce delays to minimum
-      double delay = 0.0;
-      uint_t i;
-      bool   initialreading = true;
+      double delaydynamic = 0.0;
+      double delaystatic = 0.0;
 
-      while (fscanf(fp, "%lf", &delay) > 0)
+      while (fscanf(fp, "%lf %lf", &delaydynamic, &delaystatic) > 0)
       {
-        irdelays.push_back(delay);
-
-        // update minimum delay if necessary
-        if (initialreading || (delay < mindelay)) mindelay = delay;
-
-        initialreading = false;
-      }
-
-      // reduce each delay by mindelay to reduce overall delay
-      // TODO: this isn't always acceptable behaviour
-      for (i = 0; i < irdelays.size(); i++)
-      {
-        irdelays[i] -= mindelay;
-        
-        maxdelay = MAX(maxdelay, irdelays[i]);
+        irdelays.push_back(dynamic_static_delay_pair_t(delaydynamic, delaystatic));
       }
 
       fclose(fp);
@@ -482,7 +472,7 @@ void ConvolverManager::LoadIRDelays(const char *filename)
 /** Set IR delays
  */
 /*--------------------------------------------------------------------------------*/
-void ConvolverManager::SetIRDelays(const double *delays, const uint_t num_delays)
+void ConvolverManager::SetIRDelays(const double *delays_dynamic, const uint_t num_delays, const double *delays_static)
 {
   irdelays.clear();
   maxdelay = 0.0;
@@ -493,11 +483,10 @@ void ConvolverManager::SetIRDelays(const double *delays, const uint_t num_delays
 
     irdelays.resize(num_delays);
 
-    // reduce each delay by mindelay to reduce overall delay
     for (i = 0; i < irdelays.size(); i++)
     {
-      irdelays[i] = delays[i];
-      maxdelay = MAX(maxdelay, irdelays[i]);
+      irdelays[i] = dynamic_static_delay_pair_t(delays_dynamic[i], delays_static[i]);
+      maxdelay = MAX(maxdelay, irdelays[i].first+irdelays[i].second);
     }
   }
 }
@@ -670,9 +659,8 @@ void ConvolverManager::UpdateConvolverParameters(uint_t convolver)
 
     if (ir < filters.size())
     {
-      // if a delay is available for this IR, subtract minimum delay and scale it by delayscale
-      // to compensate for ITD
-      double delay = (ir < irdelays.size()) ? irdelays[ir] * delayscale : 0.0;
+      // if a delay is available for this IR, scale the dynamic part by delayscale and add to static part
+      double delay = (ir < irdelays.size()) ? irdelays[ir].second + (irdelays[ir].first * delayscale) : 0.0;
 
       DEBUG3(("Convolver[%03u]: Selecting IR %03u and delay %10.3lf samples", convolver, ir, delay));
 
@@ -873,12 +861,18 @@ void ConvolverManager::LoadDelaysSOFA(SOFA& file)
 {
   irdelays.clear();
   maxdelay = 0.0;
+  std::vector<double> raw_delays;
 
   // get number of measurements and receivers
   float   sr = file.get_samplerate();
   uint_t  ne = file.get_num_emitters(), ie;
   uint_t  nm = file.get_num_measurements(), im, ndm = file.get_num_delay_measurements();        // number of delay measurements MAY be different fron number of measurements
   uint_t  nr = file.get_num_receivers(), ir;
+
+  // sum delays per emitter in order to calculate mean delays
+  // this allows itd scaling relative to the mean delay for that emitter
+  double delay_sums[ne];
+  double mean_delays[ne];
 
   // read delays for each receiver and insert into irdelays interleaved
   DEBUG2(("Loading %u delays from SOFA file", ne * nm * nr));
@@ -896,8 +890,34 @@ void ConvolverManager::LoadDelaysSOFA(SOFA& file)
 
         DEBUG3(("Delay for %u:%u:%u is %0.1lf samples", im, ir, ie, delay));
 
-        irdelays.push_back(delay);
+        raw_delays.push_back(delay);
+        delay_sums[ie] += delay;
         maxdelay = MAX(maxdelay, delay);
+      }
+    }
+  }
+
+  // calculate mean delays per emitter
+  // TODO: this should be based on specified quadrature weights
+  // add function to SOFA class to calculate quadrate for sample positions
+  for (ie = 0; ie < ne; ie++)     // emitters
+  {
+    mean_delays[ie] = delay_sums[ie] / (float)(nm*nr);
+  }
+
+  // now set delays with dynamic and static parts
+  // loops MUST be done in this order to maintain the correct layout
+  unsigned long ix = 0;
+  for (im = 0; im < nm; im++)         // measurements
+  {
+    for (ir = 0; ir < nr; ir++)       // receivers
+    {
+      for (ie = 0; ie < ne; ie++)     // emitters
+      {
+        // set delay pair: dynamic (scalable) delay is the given delay minus the mean for that emitter
+        //                 static delay is the mean for that emitter
+        irdelays.push_back(dynamic_static_delay_pair_t(raw_delays[ix]-mean_delays[ie], mean_delays[ie]));
+        ix++;
       }
     }
   }
