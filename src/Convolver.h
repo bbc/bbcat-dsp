@@ -89,6 +89,18 @@ public:
   virtual ~ConvolverManager();
 
   /*--------------------------------------------------------------------------------*/
+  /** Set partition size (use BEFORE creating any convolvers!)
+   */
+  /*--------------------------------------------------------------------------------*/
+  void SetPartitionSize(uint_t partitionsize);
+
+  /*--------------------------------------------------------------------------------*/
+  /** Get partition size
+   */
+  /*--------------------------------------------------------------------------------*/
+  uint_t GetPartitionSize() const {return blocksize;}
+
+  /*--------------------------------------------------------------------------------*/
   /** Create impulse responses (IRs) from sample data.
    *  IRs are sequential and data is contiguous.
    *

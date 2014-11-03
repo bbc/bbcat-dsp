@@ -107,6 +107,19 @@ ConvolverManager::~ConvolverManager()
 }
 
 /*--------------------------------------------------------------------------------*/
+/** Set partition size (use BEFORE creating any convolvers!)
+ */
+/*--------------------------------------------------------------------------------*/
+void ConvolverManager::SetPartitionSize(uint_t partitionsize)
+{
+  if (!convolvers.size())
+  {
+    blocksize = partitionsize;
+  }
+  else ERROR("Trying to change partition size in ConvolverManager AFTER creating convolvers");
+}
+
+/*--------------------------------------------------------------------------------*/
 /** Calculate number of partitions required for specified filter length and fade parameters
  */
 /*--------------------------------------------------------------------------------*/
