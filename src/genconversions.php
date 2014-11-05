@@ -60,9 +60,9 @@ if ($fp = fopen("SoundFormatRawConversions.cpp", "w")) {
   fprintf($fp, "//\n");
   fprintf($fp, "// Don't call these functions directly!  Use TransferSamples(), see SoundFormatConversions.h\n\n");
 
-  fprintf($fp, "#include <stdio.h>\n");
-  fprintf($fp, "#include <stdlib.h>\n");
-  fprintf($fp, "#include <string.h>\n");
+  //fprintf($fp, "#include <stdio.h>\n");
+  //fprintf($fp, "#include <stdlib.h>\n");
+  //fprintf($fp, "#include <string.h>\n");
   fprintf($fp, "#include <math.h>\n");
 
   fprintf($fp, "\n");

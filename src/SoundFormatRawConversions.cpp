@@ -2,9 +2,6 @@
 //
 // Don't call these functions directly!  Use TransferSamples(), see SoundFormatConversions.h
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <math.h>
 
 #define DEBUG_LEVEL 1
