@@ -62,7 +62,7 @@ if ($fp = fopen("SoundFormatRawConversions.cpp", "w")) {
 
   //fprintf($fp, "#include <stdio.h>\n");
   //fprintf($fp, "#include <stdlib.h>\n");
-  //fprintf($fp, "#include <string.h>\n");
+  fprintf($fp, "#include <string.h>\n");
   fprintf($fp, "#include <math.h>\n");
 
   fprintf($fp, "\n");

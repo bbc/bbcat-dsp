@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include <math.h>
 
 #define DEBUG_LEVEL 2 
