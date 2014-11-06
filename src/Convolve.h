@@ -40,11 +40,13 @@ private:
   // set_filter simply writes to filter_queue[0].
   // this should be num_blocks + 1 in length.
   std::vector<Filter *> filter_queue;
+  int filter_ofs;
   
   // Each of these corresponds to the matching item in filter_queue.
   // should contain the FFT of last + current (i.e. twice the block width)
   // num_blocks in length.
   std::vector<std::unique_ptr<fftwf_complex, void (*)(void*)> > spectra_queue;
+  int spectra_ofs;
   
   // The current time domain input; length 2n.
   // This is used as a temporary during filter_block, and the first half is
@@ -58,7 +60,4 @@ private:
   // temporaries used to store the time domain outputs before cross fading, size 2n
   std::unique_ptr<float, void (*)(void*)> out_td_a;
   std::unique_ptr<float, void (*)(void*)> out_td_b;
-  
-  int queue_ofs;
-  int filter_ofs;
 };
