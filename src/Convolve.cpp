@@ -1,7 +1,6 @@
 #include <Convolve.h>
 #include <assert.h>
 #include <string.h>
-#include <stdio.h>
 
 ConvolverContext::ConvolverContext(size_t block_size)
   :block_size(block_size)
@@ -154,7 +153,6 @@ void BlockConvolver::filter_block(float *in, float *out)
           new_filter->blocks[i].get(),
           spectra_queue[(queue_ofs + i) % num_blocks].get(),
           block_size + 1);
-      printf("no cross %d with %p[%d]\n", (queue_ofs + i) % num_blocks, ( void * )new_filter, i);
     } else
       need_crossfade = true;
   }
@@ -179,7 +177,6 @@ void BlockConvolver::filter_block(float *in, float *out)
             new_filter->blocks[i].get(),
             spectra_queue[(queue_ofs + i) % num_blocks].get(),
             block_size + 1);
-        printf("cross %d with %p[%d] and %p[%d]\n", (queue_ofs + i) % num_blocks, (void *)old_filter, i, (void *)new_filter, i);
       }
     }
 
@@ -194,8 +191,6 @@ void BlockConvolver::filter_block(float *in, float *out)
     fftwf_execute_dft_c2r(context->fd_to_td, multiply_out_a.get(), out_td_a.get());
     output_norm(out, out_td_a.get() + block_size, block_size);
   }
-  
-  printf("\n");
   
   // older blocks are at higher indices, so move queue_ofs left, with wrap-around.
   queue_ofs--;
