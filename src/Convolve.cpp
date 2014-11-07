@@ -2,6 +2,11 @@
 #include <assert.h>
 #include <string.h>
 
+#ifdef __SSE3__
+#  include <xmmintrin.h>
+#  include <pmmintrin.h>
+#endif
+
 
 #define TD_SIZE (block_size * 2)
 #define FD_SIZE (block_size + 1)
@@ -95,13 +100,52 @@ void BlockConvolver::set_filter(Filter *filter)
     filter_queue[i] = filter;
 }
 
-void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
+void complex_mul_sum_cpp(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
 {
   for (size_t i = 0; i < n; i++) {
     // implement out[i] += a[i] * b[i]:
     out[i][0] += a[i][0] * b[i][0] - a[i][1] * b[i][1];
     out[i][1] += a[i][0] * b[i][1] + a[i][1] * b[i][0];
   }
+}
+
+#ifdef __SSE3__
+inline __m128 complex_mul_pair_ps(__m128 a, __m128 b)
+{
+    __m128 a_r = _mm_moveldup_ps(a);
+    __m128 a_i = _mm_movehdup_ps(a);
+    __m128 tmp1 = _mm_mul_ps(a_r, b);
+    __m128 shufd = _mm_shuffle_ps(b, b, _MM_SHUFFLE(2,3,0,1));
+    __m128 tmp2 = _mm_mul_ps(a_i, shufd);
+    return _mm_addsub_ps(tmp1, tmp2);
+}
+
+void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
+{
+  assert(2 * sizeof(fftwf_complex) == 4 * sizeof(float));
+  
+  size_t offset;
+  for (offset = 0; offset + 2 <= n; offset += 2) {
+    __m128 av = _mm_load_ps((float *)(a + offset));
+    __m128 bv = _mm_load_ps((float *)(b + offset));
+    __m128 res = complex_mul_pair_ps(av, bv);
+    
+    __m128 out_old = _mm_load_ps((float *)(out + offset));
+    __m128 out_new = _mm_add_ps(out_old, res);
+    _mm_store_ps((float *)(out + offset), out_new);
+  }
+  
+  complex_mul_sum_cpp(out + offset, a + offset, b + offset, n - offset);
+}
+#endif
+
+void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
+{
+#ifdef __SSE3__
+  complex_mul_sum_sse(out, a, b, n);
+#else
+  complex_mul_sum_cpp(out, a, b, n);
+#endif
 }
 
 void fade_output_norm(float *out, float *a, float *b, size_t n)
