@@ -188,7 +188,7 @@ void BlockConvolver::filter_block(float *in, float *out)
     output_norm(out, out_td_a.get() + block_size, block_size);
   }
   
-  // older blocks are at higher indices, so move spectra_ofs left, with wrap-around.
+  // older blocks are at higher indices, so move spectra_ofs and filter_ofs left, with wrap-around.
   spectra_ofs--;
   if (spectra_ofs < 0) spectra_ofs += num_blocks;
   filter_ofs--;
