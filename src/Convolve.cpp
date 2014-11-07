@@ -113,12 +113,12 @@ void complex_mul_sum_cpp(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b,
 #ifdef __SSE3__
 inline __m128 complex_mul_pair_ps(__m128 a, __m128 b)
 {
-    __m128 a_r = _mm_moveldup_ps(a);
-    __m128 a_i = _mm_movehdup_ps(a);
-    __m128 tmp1 = _mm_mul_ps(a_r, b);
-    __m128 shufd = _mm_shuffle_ps(b, b, _MM_SHUFFLE(2,3,0,1));
-    __m128 tmp2 = _mm_mul_ps(a_i, shufd);
-    return _mm_addsub_ps(tmp1, tmp2);
+  __m128 a_r = _mm_moveldup_ps(a);
+  __m128 a_i = _mm_movehdup_ps(a);
+  __m128 tmp1 = _mm_mul_ps(a_r, b);
+  __m128 shufd = _mm_shuffle_ps(b, b, _MM_SHUFFLE(2,3,0,1));
+  __m128 tmp2 = _mm_mul_ps(a_i, shufd);
+  return _mm_addsub_ps(tmp1, tmp2);
 }
 
 void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
