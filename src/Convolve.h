@@ -1,6 +1,12 @@
+#ifndef __CONVOLVE__
+#define __CONVOLVE__
+
 #include <fftw3.h>
 #include <vector>
 #include <memory>
+#include <bbcat-base/misc.h>
+
+BBC_AUDIOTOOLBOX_START
 
 class ConvolverContext {
 public:
@@ -61,3 +67,7 @@ private:
   std::unique_ptr<float, void (*)(void*)> out_td_a;
   std::unique_ptr<float, void (*)(void*)> out_td_b;
 };
+
+BBC_AUDIOTOOLBOX_END
+
+#endif

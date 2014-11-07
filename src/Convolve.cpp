@@ -7,6 +7,7 @@
 #  include <pmmintrin.h>
 #endif
 
+BBC_AUDIOTOOLBOX_START
 
 #define TD_SIZE (block_size * 2)
 #define FD_SIZE (block_size + 1)
@@ -246,3 +247,5 @@ void BlockConvolver::filter_block(float *in, float *out)
 #undef FD_SIZE
 #undef SPECTRA_IDX
 #undef FILTER_IDX
+
+BBC_AUDIOTOOLBOX_END
