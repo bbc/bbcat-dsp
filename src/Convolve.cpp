@@ -158,19 +158,23 @@ void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, siz
 
 void fade_output_norm(float *out, float *a, float *b, size_t n)
 {
+  float norm = 1.0 / (2 * n);
+  float i_scale = 1.0 / (n-1);
+  
   for (size_t i = 0; i < n; i++)
   {
-    float b_v = (float)i / (float)(n-1);
+    float b_v = (float)i * i_scale;
     float a_v = 1.0f - b_v;
-    out[i] = (a_v * a[i] + b_v * b[i]) / ((float)n * 2.0f);
+    out[i] = (a_v * a[i] + b_v * b[i]) * norm;
   }
 }
 
 void output_norm(float *out, float *a, size_t n)
 {
+  float norm = 1.0 / (2 * n);
   for (size_t i = 0; i < n; i++)
   {
-    out[i] = a[i] / ((float)n * 2.0f);
+    out[i] = a[i] * norm;
   }
 }
 
