@@ -9,8 +9,8 @@
 ConvolverContext::ConvolverContext(size_t block_size)
   :block_size(block_size)
 {
-  float *td = (float *)fftwf_malloc(TD_SIZE * sizeof(float));
-  fftwf_complex *fd = (fftwf_complex *)fftwf_malloc(FD_SIZE * sizeof(fftwf_complex));
+  float *td = fftwf_alloc_real(TD_SIZE);
+  fftwf_complex *fd = fftwf_alloc_complex(FD_SIZE);
   
   td_to_fd = fftwf_plan_dft_r2c_1d(TD_SIZE, td, fd, FFTW_DESTROY_INPUT | FFTW_MEASURE);
   fd_to_td = fftwf_plan_dft_c2r_1d(TD_SIZE, fd, td, FFTW_DESTROY_INPUT | FFTW_MEASURE);
@@ -30,7 +30,7 @@ Filter::Filter(ConvolverContext *context, size_t block_size, size_t filter_lengt
 {
   assert(context->block_size == block_size);
 
-  float *td = (float *)fftwf_malloc(TD_SIZE * sizeof(*td));
+  float *td = fftwf_alloc_real(TD_SIZE);
   
   for (size_t offset = 0; offset < filter_length; offset += block_size)
   {
@@ -41,7 +41,7 @@ Filter::Filter(ConvolverContext *context, size_t block_size, size_t filter_lengt
     memset(td + this_block_size, 0, (TD_SIZE - this_block_size) * sizeof(*coefficients));
     
     // fft into fd
-    fftwf_complex *fd = (fftwf_complex *)fftwf_malloc(FD_SIZE * sizeof(*fd));
+    fftwf_complex *fd = fftwf_alloc_complex(FD_SIZE);
     fftwf_execute_dft_r2c(context->td_to_fd, td, fd);
     
     blocks.emplace_back(
@@ -62,21 +62,18 @@ BlockConvolver::BlockConvolver(ConvolverContext *context, size_t block_size, siz
   ,filter_queue(num_blocks + 1, NULL)
   ,filter_ofs(0)
   ,spectra_ofs(0)
-  ,current_td((float *)fftwf_malloc(block_size * 2 * sizeof(float)), &fftwf_free)
-  ,multiply_out_a((fftwf_complex *)fftwf_malloc((block_size + 1) * sizeof(fftwf_complex)), &fftwf_free)
-  ,multiply_out_b((fftwf_complex *)fftwf_malloc((block_size + 1) * sizeof(fftwf_complex)), &fftwf_free)
-  ,out_td_a((float *)fftwf_malloc((block_size * 2) * sizeof(float)), &fftwf_free)
-  ,out_td_b((float *)fftwf_malloc((block_size * 2) * sizeof(float)), &fftwf_free)
+  ,current_td(fftwf_alloc_real(block_size * 2), &fftwf_free)
+  ,multiply_out_a(fftwf_alloc_complex(block_size + 1), &fftwf_free)
+  ,multiply_out_b(fftwf_alloc_complex(block_size + 1), &fftwf_free)
+  ,out_td_a(fftwf_alloc_real(block_size * 2), &fftwf_free)
+  ,out_td_b(fftwf_alloc_real(block_size * 2), &fftwf_free)
 {
   assert(context->block_size == block_size);
   
   for (size_t i = 0; i < num_blocks; i++)
   {
     spectra_queue.emplace_back(
-        std::unique_ptr<fftwf_complex, void (*)(void*)>(
-          (fftwf_complex *)fftwf_malloc(FD_SIZE * sizeof(fftwf_complex)),
-          &fftwf_free
-        )
+        std::unique_ptr<fftwf_complex, void (*)(void*)>(fftwf_alloc_complex(FD_SIZE), &fftwf_free)
     );
     
     memset(spectra_queue[i].get(), 0, FD_SIZE * sizeof(fftwf_complex));
