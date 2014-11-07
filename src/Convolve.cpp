@@ -12,7 +12,7 @@ BBC_AUDIOTOOLBOX_START
 #define TD_SIZE (block_size * 2)
 #define FD_SIZE (block_size + 1)
 
-ConvolverContext::ConvolverContext(size_t block_size)
+BlockConvolver::Context::Context(size_t block_size)
   :block_size(block_size)
 {
   float *td = fftwf_alloc_real(TD_SIZE);
@@ -25,13 +25,13 @@ ConvolverContext::ConvolverContext(size_t block_size)
   fftwf_free(fd);
 }
 
-ConvolverContext::~ConvolverContext()
+BlockConvolver::Context::~Context()
 {
   fftwf_destroy_plan(td_to_fd);
   fftwf_destroy_plan(fd_to_td);
 }
 
-Filter::Filter(ConvolverContext *context, size_t block_size, size_t filter_length, float *coefficients)
+BlockConvolver::Filter::Filter(Context *context, size_t block_size, size_t filter_length, float *coefficients)
   :block_size(block_size)
 {
   assert(context->block_size == block_size);
@@ -61,7 +61,7 @@ Filter::Filter(ConvolverContext *context, size_t block_size, size_t filter_lengt
 #define SPECTRA_IDX(i) ((spectra_ofs + (i)) % num_blocks)
 #define FILTER_IDX(i) ((filter_ofs + (i)) % (num_blocks + 1))
 
-BlockConvolver::BlockConvolver(ConvolverContext *context, size_t block_size, size_t num_blocks)
+BlockConvolver::BlockConvolver(Context *context, size_t block_size, size_t num_blocks)
   :context(context)
   ,block_size(block_size)
   ,num_blocks(num_blocks)
