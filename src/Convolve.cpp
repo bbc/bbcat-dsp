@@ -121,19 +121,26 @@ inline __m128 complex_mul_pair_ps(__m128 a, __m128 b)
   return _mm_addsub_ps(tmp1, tmp2);
 }
 
+inline void complex_mul_pair_accumulate(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b)
+{
+  __m128 av = _mm_load_ps((float *)a);
+  __m128 bv = _mm_load_ps((float *)b);
+  __m128 res = complex_mul_pair_ps(av, bv);
+
+  __m128 out_old = _mm_load_ps((float *)out);
+  __m128 out_new = _mm_add_ps(out_old, res);
+  _mm_store_ps((float *)out, out_new);
+}
+
 void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
 {
   assert(2 * sizeof(fftwf_complex) == 4 * sizeof(float));
   
   size_t offset;
-  for (offset = 0; offset + 2 <= n; offset += 2) {
-    __m128 av = _mm_load_ps((float *)(a + offset));
-    __m128 bv = _mm_load_ps((float *)(b + offset));
-    __m128 res = complex_mul_pair_ps(av, bv);
-    
-    __m128 out_old = _mm_load_ps((float *)(out + offset));
-    __m128 out_new = _mm_add_ps(out_old, res);
-    _mm_store_ps((float *)(out + offset), out_new);
+  for (offset = 0; offset + 6 <= n; offset += 6) {
+    complex_mul_pair_accumulate(out + offset, a + offset, b + offset);
+    complex_mul_pair_accumulate(out + offset + 2, a + offset + 2, b + offset + 2);
+    complex_mul_pair_accumulate(out + offset + 4, a + offset + 4, b + offset + 4);
   }
   
   complex_mul_sum_cpp(out + offset, a + offset, b + offset, n - offset);
