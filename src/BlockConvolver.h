@@ -1,5 +1,5 @@
-#ifndef __CONVOLVE__
-#define __CONVOLVE__
+#ifndef __BLOCK_CONVOLVER__
+#define __BLOCK_CONVOLVER__
 
 #include <fftw3.h>
 #include <vector>

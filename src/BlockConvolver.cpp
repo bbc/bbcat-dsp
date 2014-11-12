@@ -1,4 +1,4 @@
-#include <Convolve.h>
+#include <BlockConvolver.h>
 #include <assert.h>
 #include <string.h>
 
