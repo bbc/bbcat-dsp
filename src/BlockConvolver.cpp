@@ -88,13 +88,13 @@ BlockConvolver::BlockConvolver(Context *context, size_t block_size, size_t num_b
   memset(current_td.get(), 0, block_size * 2 * sizeof(float));
 }
 
-void BlockConvolver::crossfade_filter(Filter *filter)
+void BlockConvolver::crossfade_filter(const Filter *filter)
 {
   assert(filter->block_size == block_size);
   filter_queue[FILTER_IDX(0)] = filter;
 }
 
-void BlockConvolver::set_filter(Filter *filter)
+void BlockConvolver::set_filter(const Filter *filter)
 {
   assert(filter->block_size == block_size);
   for (size_t i = 0; i < filter_queue.size(); i++)
@@ -196,8 +196,8 @@ void BlockConvolver::filter_block(float *in, float *out)
   bool need_crossfade = false;
   for (size_t i = 0; i < num_blocks; i++)
   {
-    Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
-    Filter *new_filter = filter_queue[FILTER_IDX(i  )];
+    const Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
+    const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
     
     if (old_filter == new_filter) {
       complex_mul_sum(
@@ -216,8 +216,8 @@ void BlockConvolver::filter_block(float *in, float *out)
     memcpy(multiply_out_b.get(), multiply_out_a.get(), FD_SIZE * sizeof(*multiply_out_a));
     for (size_t i = 0; i < num_blocks; i++)
     {
-      Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
-      Filter *new_filter = filter_queue[FILTER_IDX(i  )];
+      const Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
+      const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
       if (old_filter != new_filter) {
         complex_mul_sum(
             multiply_out_a.get(),

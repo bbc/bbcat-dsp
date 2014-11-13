@@ -39,8 +39,8 @@ class BlockConvolver {
     
     void filter_block(float *in, float *out);
     
-    void crossfade_filter(Filter *filter);
-    void set_filter(Filter *filter);
+    void crossfade_filter(const Filter *filter);
+    void set_filter(const Filter *filter);
     
   private:
     Context *context;
@@ -53,7 +53,7 @@ class BlockConvolver {
     // after filter_block, filter_queue has been shifted one along, with filter_queue[0] left at filter_queue[0]
     // set_filter simply writes to filter_queue[0].
     // this should be num_blocks + 1 in length.
-    std::vector<Filter *> filter_queue;
+    std::vector<const Filter *> filter_queue;
     int filter_ofs;
     
     // Each of these corresponds to the matching item in filter_queue.
