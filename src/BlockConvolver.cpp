@@ -188,7 +188,7 @@ void BlockConvolver::filter_block(float *in, float *out)
   memcpy(current_td.get(), in, block_size * sizeof(*current_td));
   
   // clear multiply_out_a
-  memset(multiply_out_a.get(), 0, (block_size + 1) * sizeof(fftwf_complex));
+  memset(multiply_out_a.get(), 0, FD_SIZE * sizeof(fftwf_complex));
   
   // multiply the spectra of all filters with the corresponding input spectra,
   // summing into multiply_out_a, for blocks where a crossfade is not needed.
@@ -204,7 +204,7 @@ void BlockConvolver::filter_block(float *in, float *out)
           multiply_out_a.get(),
           new_filter->blocks[i].get(),
           spectra_queue[SPECTRA_IDX(i)].get(),
-          block_size + 1);
+          FD_SIZE);
     } else
       need_crossfade = true;
   }
@@ -213,7 +213,7 @@ void BlockConvolver::filter_block(float *in, float *out)
     // copy multiply_out_a (containing all output blocks that don't need
     // crossfading) into multiply_out_b, then sum the old and new outputs into
     // multiply_out_a and multiply_out_b, respectively.
-    memcpy(multiply_out_b.get(), multiply_out_a.get(), (block_size + 1) * sizeof(*multiply_out_a));
+    memcpy(multiply_out_b.get(), multiply_out_a.get(), FD_SIZE * sizeof(*multiply_out_a));
     for (size_t i = 0; i < num_blocks; i++)
     {
       Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
@@ -223,12 +223,12 @@ void BlockConvolver::filter_block(float *in, float *out)
             multiply_out_a.get(),
             old_filter->blocks[i].get(),
             spectra_queue[SPECTRA_IDX(i)].get(),
-            block_size + 1);
+            FD_SIZE);
         complex_mul_sum(
             multiply_out_b.get(),
             new_filter->blocks[i].get(),
             spectra_queue[SPECTRA_IDX(i)].get(),
-            block_size + 1);
+            FD_SIZE);
       }
     }
 
