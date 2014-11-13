@@ -18,19 +18,7 @@
 #if ENABLE_SOFA
 #include "SOFA.h"
 #endif
-
-// APF convolver header files cannot be included in header files because of function implementations in the header files
-// which lead to multiple definitions when linking!
-// So this acts as a prototype for the required objects from convolver.h
-namespace apf
-{
-  namespace conv
-  {
-    struct Convolver;
-    struct StaticConvolver;
-    struct Filter;
-  }
-}
+#include "BlockConvolver.h"
 
 BBC_AUDIOTOOLBOX_START
 
@@ -261,15 +249,7 @@ public:
   /*--------------------------------------------------------------------------------*/
   virtual uint_t SamplesBuffered() const;
 
-  typedef struct
-  {
-    apf::conv::Convolver       *dynamicconvolver;
-    apf::conv::StaticConvolver *staticconvolver;
-  } APFConvolver;
-
 protected:
-  typedef apf::conv::Filter APFFilter;
-
   /*--------------------------------------------------------------------------------*/
   /** Update the parameters of an individual convolver
    *
@@ -280,12 +260,12 @@ protected:
   /*--------------------------------------------------------------------------------*/
   virtual void UpdateConvolverParameters(uint_t convolver);
 
-  typedef struct
+  struct PARAMETERS
   {
     uint_t irindex;
     double delay;
     double level;
-  } PARAMETERS;
+  };
 
 protected:
 #if ENABLE_SOFA
@@ -336,7 +316,7 @@ protected:
   uint_t                   blocksize;
   uint_t                   partitions;
   std::vector<Convolver *> convolvers;
-  std::vector<APFFilter>   filters;
+  std::vector<BlockConvolver::Filter>   filters;
   typedef std::pair<double, double>             dynamic_static_delay_pair_t;
   std::vector<dynamic_static_delay_pair_t>      irdelays;
   std::vector<PARAMETERS>  parameters;
@@ -346,6 +326,8 @@ protected:
   ulong_t                  reporttick;
   bool                     hqproc;
   bool                     updateparameters;
+
+  BlockConvolver::Context context;
 };
 
 class Convolver
@@ -359,13 +341,11 @@ public:
 protected:
   friend class ConvolverManager;
 
-  typedef apf::conv::Filter APFFilter;
-
   /*--------------------------------------------------------------------------------*/
   /** Protected constructor so that only ConvolverManager can create convolvers
    */
   /*--------------------------------------------------------------------------------*/
-  Convolver(uint_t _convindex, uint_t _blocksize, uint_t _partitions, double _delay = 0.0);
+  Convolver(BlockConvolver::Context *ctx, uint_t _convindex, uint_t _blocksize, uint_t _partitions, double _delay = 0.0);
 
   /*--------------------------------------------------------------------------------*/
   /** Start convolution thread
@@ -423,8 +403,24 @@ protected:
     return convolver.Process();
   }
 
-  virtual void *Process();
-  virtual void Convolve(float *dest) {UNUSED_PARAMETER(dest);}
+  void *Process();
+
+  /*--------------------------------------------------------------------------------*/
+  /** Set IR filter for convolution
+   *
+   * @param newfilter new IR filter from ConvolverManager
+   */
+  /*--------------------------------------------------------------------------------*/
+  void SetFilter(const BlockConvolver::Filter& newfilter);
+
+  /*--------------------------------------------------------------------------------*/
+  /** Actually perform convolution on the input and store it in the provided buffer
+   *
+   * @param dest destination buffer
+   *
+   */
+  /*--------------------------------------------------------------------------------*/
+  void Convolve(float *dest);
 
   std::string DebugHeader() const;
 
@@ -438,91 +434,18 @@ protected:
   uint_t                   maxzeroblocks;
   uint_t                   convindex;
 
-  volatile float           *input;
-  volatile float           *output;
+  float           *volatile input;
+  float           *volatile output;
   volatile double          outputdelay;
   volatile double          outputlevel;
   volatile bool            hqproc;
   volatile bool            quitthread;
 
   static   uint_t          maxadditionaldelay;
-};
 
-/*----------------------------------------------------------------------------------------------------*/
-
-class DynamicConvolver : public Convolver
-{
-public:
-  // no public constructor
-  virtual ~DynamicConvolver();
-
-  // no public members - everything is driven by a ConvolverManager
-
-protected:
-  friend class ConvolverManager;
-  typedef apf::conv::Convolver APFConvolver;
-
-  /*--------------------------------------------------------------------------------*/
-  /** Protected constructor so that only ConvolverManager can create convolvers
-   */
-  /*--------------------------------------------------------------------------------*/
-  DynamicConvolver(uint_t _convindex, uint_t _blocksize, uint_t _partitions, APFConvolver *_convolver);
-  
-  /*--------------------------------------------------------------------------------*/
-  /** Set IR filter for convolution
-   *
-   * @param newfilter new IR filter from ConvolverManager
-   */
-  /*--------------------------------------------------------------------------------*/
-  virtual void SetFilter(const APFFilter& newfilter);
-  
-  /*--------------------------------------------------------------------------------*/
-  /** Actually perform convolution on the input and store it in the provided buffer
-   *
-   * @param dest destination buffer
-   *
-   */
-  /*--------------------------------------------------------------------------------*/
-  virtual void Convolve(float *dest);
-
-protected:
-  APFConvolver    *convolver;
-  const APFFilter *convfilter;
-
-  volatile const APFFilter *filter;
-};
-
-/*----------------------------------------------------------------------------------------------------*/
-
-class StaticConvolver : public Convolver
-{
-public:
-  // no public constructor
-  virtual ~StaticConvolver();
-
-  // no public members - everything is driven by a ConvolverManager
-
-protected:
-  friend class ConvolverManager;
-  typedef apf::conv::StaticConvolver APFConvolver;
-
-  /*--------------------------------------------------------------------------------*/
-  /** Protected constructor so that only ConvolverManager can create convolvers
-   */
-  /*--------------------------------------------------------------------------------*/
-  StaticConvolver(uint_t _convindex, uint_t _blocksize, uint_t _partitions, APFConvolver *_convolver, double _delay);
-
-  /*--------------------------------------------------------------------------------*/
-  /** Actually perform convolution on the input and store it in the provided buffer
-   *
-   * @param dest destination buffer
-   *
-   */
-  /*--------------------------------------------------------------------------------*/
-  virtual void Convolve(float *dest);
-
-protected:
-  APFConvolver *convolver;
+  BlockConvolver convolver;
+  const BlockConvolver::Filter *current_filter;
+  const BlockConvolver::Filter *volatile filter;
 };
 
 BBC_AUDIOTOOLBOX_END
