@@ -5,7 +5,11 @@ include doxygen.am
 
 SUBDIRS = src test
 
-EXTRA_DIST = README COPYING autogen.sh
+dsp_DATA  = share/licences.txt
+
+dspdir = $(prefix)/share/$(PACKAGE)
+
+EXTRA_DIST = README COPYING autogen.sh $(dsp_DATA)
 
 pkgconfig_DATA = bbcat-dsp-$(BBCAT_DSP_MAJORMINOR).pc
 
