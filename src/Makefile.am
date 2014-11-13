@@ -40,13 +40,11 @@ libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES  += Convolver.cpp BlockConvolver.
 pkginclude_HEADERS                              += Convolver.h BlockConvolver.h
 endif
 
-if ENABLE_GPL
 if ENABLE_SOFA
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_CPPFLAGS += $(NETCDF_CFLAGS) $(NETCDFCXX_CFLAGS)
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_LIBADD   += $(NETCDF_LIBS) $(NETCDFCXX_LIBS)
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES  += SOFA.cpp
 pkginclude_HEADERS                              += SOFA.h
-endif
 endif
 
 noinst_HEADERS =
