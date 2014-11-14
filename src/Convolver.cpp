@@ -1242,10 +1242,15 @@ void Convolver::SetFilter(const BlockConvolver::Filter& newfilter)
 void Convolver::Convolve(float *dest)
 {
   // if filter needs updating, update it now
-  if (filter && (filter != current_filter))
+  if (filter != NULL && (filter != current_filter))
   {
+    // set filter the first time round, otherwise crossfade
+    if (current_filter == NULL)
+      convolver.set_filter(filter);
+    else
+      convolver.crossfade_filter(filter);
+    
     current_filter = filter;
-    convolver.crossfade_filter(current_filter);
   }
 
   convolver.filter_block(input, dest);
