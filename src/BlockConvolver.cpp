@@ -204,11 +204,12 @@ void BlockConvolver::filter_block(float *in, float *out)
     const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
     
     if (old_filter == new_filter) {
-      complex_mul_sum(
-          multiply_out_a.get(),
-          new_filter->blocks[i].get(),
-          spectra_queue[SPECTRA_IDX(i)].get(),
-          FD_SIZE);
+      if (new_filter != NULL && i <= new_filter->blocks.size())
+        complex_mul_sum(
+            multiply_out_a.get(),
+            new_filter->blocks[i].get(),
+            spectra_queue[SPECTRA_IDX(i)].get(),
+            FD_SIZE);
     } else
       need_crossfade = true;
   }
@@ -223,16 +224,18 @@ void BlockConvolver::filter_block(float *in, float *out)
       const Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
       const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
       if (old_filter != new_filter) {
-        complex_mul_sum(
-            multiply_out_a.get(),
-            old_filter->blocks[i].get(),
-            spectra_queue[SPECTRA_IDX(i)].get(),
-            FD_SIZE);
-        complex_mul_sum(
-            multiply_out_b.get(),
-            new_filter->blocks[i].get(),
-            spectra_queue[SPECTRA_IDX(i)].get(),
-            FD_SIZE);
+        if (old_filter != NULL && i <= old_filter->blocks.size())
+          complex_mul_sum(
+              multiply_out_a.get(),
+              old_filter->blocks[i].get(),
+              spectra_queue[SPECTRA_IDX(i)].get(),
+              FD_SIZE);
+        if (new_filter != NULL && i <= new_filter->blocks.size())
+          complex_mul_sum(
+              multiply_out_b.get(),
+              new_filter->blocks[i].get(),
+              spectra_queue[SPECTRA_IDX(i)].get(),
+              FD_SIZE);
       }
     }
 
