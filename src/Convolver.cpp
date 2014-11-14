@@ -1278,7 +1278,7 @@ void DynamicConvolver::SetFilter(const APFFilter& newfilter)
 /*--------------------------------------------------------------------------------*/
 void DynamicConvolver::Convolve(float *dest)
 {
-  bool crossfade = false;
+  bool filter_blocks_changed = false;
 
   // add input to convolver
   convolver->add_block(input);
@@ -1289,24 +1289,27 @@ void DynamicConvolver::Convolve(float *dest)
   // copy data into delay memory
   memcpy(dest, result, blocksize * sizeof(*dest));
 
-  // if filter needs updating, update it now
+  // rotate filter blocks if necessary
+  if (!convolver->queues_empty()) {
+    convolver->rotate_queues(); // rotates all blocks but the first
+    filter_blocks_changed = true;
+  }
+
+  // if filter needs updating, update it
   if (filter && (filter != convfilter))
   {
     convfilter = (const APFFilter *)filter;
-    convolver->set_filter(*convfilter);
-    crossfade = true;   // force crossfade after filter update
+    convolver->set_filter(*convfilter); // sets the first block, and schedules the rest, which will be set in future calls to rotate_queues
+    filter_blocks_changed = true;   // force crossfade after filter update
     DEBUG3(("[%010lu]: Selected new filter for convolver %3u", GetTickCount(), convindex));
   }
 
-  // if queues_empty() returns false, must cross fade between convolutions
-  if (crossfade || !convolver->queues_empty())
+  // crossfade if any filter blocks have changed
+  if (filter_blocks_changed)
   {
     uint_t i;
 
     DEBUG3(("Crossfading convolver %u", convindex));
-
-    // rotate queues within convolver
-    convolver->rotate_queues();
 
     // do convolution a second time
     result = convolver->convolve(1.f);
