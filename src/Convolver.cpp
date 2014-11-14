@@ -533,7 +533,7 @@ void ConvolverManager::PrepareStaticConvolvers(STATIC_CONVOLVER_DATA& convolverd
 
   // calculate number of partitions and filter start/length
   partitions = CalcPartitions(fade, samplerate, irlength, blocksize, convolverdata.filterstart, convolverdata.filterlen);
-  
+
   // create fades
   CreateFades(fade, samplerate, convolverdata.fadein, convolverdata.fadeout);
 }
@@ -584,7 +584,7 @@ void ConvolverManager::CreateStaticConvolver(SOFA& file, uint_t index, double de
 void ConvolverManager::SetConvolverCount(uint_t nconvolvers)
 {
   DEBUG3(("ConvolverManager<%016lx>: setting up for %u convolvers (from %u convolvers)", (ulong_t)this, nconvolvers, (uint_t)convolvers.size()));
- 
+
   // update parameters array size
   parameters.resize(nconvolvers);
 
@@ -634,8 +634,6 @@ bool ConvolverManager::SelectIR(uint_t convolver, uint_t ir, double level, doubl
 
   if (convolver < convolvers.size())
   {
-    if (ir < filters.size())
-    {
       // store parameters for convolver
       parameters[convolver].irindex = ir;
       parameters[convolver].level   = level;
@@ -645,8 +643,6 @@ bool ConvolverManager::SelectIR(uint_t convolver, uint_t ir, double level, doubl
       UpdateConvolverParameters(convolver);
 
       success = true;
-    }
-    else ERROR("Out-of-bounds IR %u requested", ir);
   }
   else ERROR("Out-of-bounds convolver %u requested", convolver);
 
@@ -668,24 +664,25 @@ void ConvolverManager::UpdateConvolverParameters(uint_t convolver)
     const PARAMETERS& params = parameters[convolver];
     uint_t ir = params.irindex;
 
-    if (ir < filters.size())
+    // if a delay is available for this IR, scale the dynamic part by delayscale and add to static part
+    double delay = (ir < irdelays.size()) ? irdelays[ir].second + (irdelays[ir].first * delayscale) : 0.0;
+
+    DEBUG3(("Convolver[%03u]: Selecting IR %03u and delay %10.3lf samples", convolver, ir, delay));
+
+    // pass parameters to convolver, add additional delay to scaled delay due to IR's
+    DynamicConvolver *dynconv;
+    if ((dynconv = dynamic_cast<DynamicConvolver *>(convolvers[convolver])) != NULL)
     {
-      // if a delay is available for this IR, scale the dynamic part by delayscale and add to static part
-      double delay = (ir < irdelays.size()) ? irdelays[ir].second + (irdelays[ir].first * delayscale) : 0.0;
-
-      DEBUG3(("Convolver[%03u]: Selecting IR %03u and delay %10.3lf samples", convolver, ir, delay));
-
-      // pass parameters to convolver, add additional delay to scaled delay due to IR's
-      DynamicConvolver *dynconv;
-      if ((dynconv = dynamic_cast<DynamicConvolver *>(convolvers[convolver])) != NULL)
+      if (ir < filters.size())
       {
         // Dynamic Convolver -> set IR filter
         dynconv->SetFilter(filters[ir]);
       }
-
-      // set other parameters
-      convolvers[convolver]->SetParameters(params.level, delay + params.delay, hqproc);
+      else ERROR("Out-of-bounds IR %u requested", ir);
     }
+
+    // set other parameters
+    convolvers[convolver]->SetParameters(params.level, delay + params.delay, hqproc);
   }
 }
 
@@ -772,7 +769,7 @@ uint_t ConvolverManager::GetSOFAOffset(const SOFA& file, uint_t emitter, uint_t 
 {
   uint_t nr = file.get_num_receivers();
   uint_t ne = file.get_num_emitters();
-  
+
   // This is VERY MUCH reliant on the format of the SOFA file!
   // ASSUMES data is stored in a 3-dimensional array [measurement][receiver][emitter]
   return measurement * nr * ne + receiver * ne + emitter;
@@ -957,7 +954,7 @@ float ConvolverManager::CalculateLevel(const float *data, uint_t n)
   float  sum = 0.f;
   float  max = 0.f;
   uint_t i;
-  
+
   for (i = 0; i < n; i++)
   {
     sum += data[i] * data[i];
@@ -1153,7 +1150,7 @@ void *Convolver::Process()
     startsignal.Wait();
 
     DEBUG4(("%sproc start", DebugHeader().c_str()));
-    
+
     // detect quit request
     if (quitthread) break;
 
@@ -1268,7 +1265,7 @@ void DynamicConvolver::SetFilter(const APFFilter& newfilter)
     filter = &newfilter;
   }
 }
-  
+
 /*--------------------------------------------------------------------------------*/
 /** Actually perform convolution on the input and store it in the provided buffer
  *
@@ -1285,7 +1282,7 @@ void DynamicConvolver::Convolve(float *dest)
 
   // do convolution
   const float *result = convolver->convolve(1.f);
-            
+
   // copy data into delay memory
   memcpy(dest, result, blocksize * sizeof(*dest));
 
@@ -1354,7 +1351,7 @@ void StaticConvolver::Convolve(float *dest)
 
   // do convolution
   const float *result = convolver->convolve(1.f);
-            
+
   // copy data into delay memory
   memcpy(dest, result, blocksize * sizeof(*dest));
 }
