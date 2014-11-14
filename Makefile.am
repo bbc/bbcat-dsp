@@ -5,7 +5,7 @@ include doxygen.am
 
 SUBDIRS = src test
 
-dsp_DATA  = share/licences.txt
+dsp_DATA = share/licences.txt
 
 dspdir = $(prefix)/share/$(PACKAGE)
 
