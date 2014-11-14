@@ -882,8 +882,8 @@ void ConvolverManager::LoadDelaysSOFA(SOFA& file)
 
   // sum delays per emitter in order to calculate mean delays
   // this allows itd scaling relative to the mean delay for that emitter
-  double delay_sums[ne] = {};
-  double mean_delays[ne] = {};
+  std::vector<double> delay_sums(ne);
+  std::vector<double> mean_delays(ne);
 
   // read delays for each receiver and insert into irdelays interleaved
   DEBUG2(("Loading %u delays from SOFA file", ne * nm * nr));
