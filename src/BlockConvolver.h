@@ -26,7 +26,7 @@ class BlockConvolver {
     class Filter {
       public:
         Filter(Context *context, size_t block_size, size_t filter_length, float *coefficients);
-        size_t num_blocks() { return blocks.size(); }
+        size_t num_blocks() const { return blocks.size(); }
 
       private:
         size_t block_size;
