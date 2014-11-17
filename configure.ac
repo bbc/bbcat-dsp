@@ -114,13 +114,6 @@ if test "x$ENABLE_CONVOLVER" = "xyes"; then
   if test "x${HAVE_FFTW}" != xyes ; then
     AC_MSG_ERROR([fftw3f >= $FFTW_VER is required])
   fi
-  
-  dnl Check for apf
-  APF_VER="0.2.0"
-  PKG_CHECK_MODULES([APF], [apf-0.2 >= 0.2.0], HAVE_APF=yes, HAVE_APF=no)
-  if test "x${HAVE_APF}" != xyes ; then
-    AC_MSG_ERROR([apf >= $APF_VER is required])
-  fi
 fi
 
 # Check if we should disable optimization  (./configure --disable-opt)

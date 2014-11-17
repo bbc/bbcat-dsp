@@ -34,8 +34,8 @@ pkginclude_HEADERS =							\
 	SoundMixing.h
 
 if ENABLE_CONVOLVER
-libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_CPPFLAGS += $(APF_CFLAGS) $(SNDFILE_CFLAGS) $(FFTW_CFLAGS)
-libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_LIBADD   += $(APF_LIBS) $(SNDFILE_LIBS) $(FFTW_LIBS)
+libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_CPPFLAGS += $(SNDFILE_CFLAGS) $(FFTW_CFLAGS)
+libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_LIBADD   += $(SNDFILE_LIBS) $(FFTW_LIBS)
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES  += Convolver.cpp BlockConvolver.cpp
 pkginclude_HEADERS                              += Convolver.h BlockConvolver.h
 endif
