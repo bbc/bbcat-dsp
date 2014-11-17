@@ -43,6 +43,18 @@ class BlockConvolver {
     void set_filter(const Filter *filter);
     
   private:
+    template <typename T>
+    struct Buffer {
+      explicit Buffer(size_t len);
+      std::unique_ptr<T, void (*)(void*)> data;
+      size_t len;
+      bool zero = true;
+      
+      T *read_ptr();
+      T *write_ptr();
+      void clear();
+    };
+    
     Context *context;
     size_t block_size;
     size_t num_blocks;
@@ -59,21 +71,21 @@ class BlockConvolver {
     // Each of these corresponds to the matching item in filter_queue.
     // should contain the FFT of last + current (i.e. twice the block width)
     // num_blocks in length.
-    std::vector<std::unique_ptr<fftwf_complex, void (*)(void*)> > spectra_queue;
+    std::vector<Buffer<fftwf_complex>> spectra_queue;
     int spectra_ofs;
     
     // The current time domain input; length 2n.
     // This is used as a temporary during filter_block, and the first half is
     // used to store the last filter block between calls; the second half is undefined.
-    std::unique_ptr<float, void (*)(void*)> current_td;
+    Buffer<float> current_td;
     
     // temporaries used by filter_block to store the multiplied spectrums; size n+1
-    std::unique_ptr<fftwf_complex, void (*)(void*)> multiply_out_a;
-    std::unique_ptr<fftwf_complex, void (*)(void*)> multiply_out_b;
+    Buffer<fftwf_complex> multiply_out_a;
+    Buffer<fftwf_complex> multiply_out_b;
     
     // temporaries used to store the time domain outputs before cross fading, size 2n
-    std::unique_ptr<float, void (*)(void*)> out_td_a;
-    std::unique_ptr<float, void (*)(void*)> out_td_b;
+    Buffer<float> out_td_a;
+    Buffer<float> out_td_b;
 };
 
 BBC_AUDIOTOOLBOX_END
