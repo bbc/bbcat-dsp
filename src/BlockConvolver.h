@@ -68,24 +68,27 @@ class BlockConvolver {
     std::vector<const Filter *> filter_queue;
     int filter_ofs;
     
-    // Each of these corresponds to the matching item in filter_queue.
-    // should contain the FFT of last + current (i.e. twice the block width)
-    // num_blocks in length.
-    std::vector<Buffer<fftwf_complex>> spectra_queue;
+    // The spectra of the input, after padding on the right hand side.
+    // If the filter is changed before input block i, spectra_queue_old[i]
+    // contains the input faded down (to convolve with the old filter) and
+    // spectra_queue_new[i] contains the input faded up (to convolve with the
+    // new filter).
+    // If the filter is not changed, only spectra_queue_new contains data.
+    // num_blocks in length, each of size n+1.
+    std::vector<Buffer<fftwf_complex>> spectra_queue_old;
+    std::vector<Buffer<fftwf_complex>> spectra_queue_new;
     int spectra_ofs;
     
-    // The current time domain input; length 2n.
-    // This is used as a temporary during filter_block, and the first half is
-    // used to store the last filter block between calls; the second half is undefined.
-    Buffer<float> current_td;
+    // The second half of the ifft output for the last block, added to the first half before output; size n.
+    Buffer<float> last_tail;
     
-    // temporaries used by filter_block to store the multiplied spectrums; size n+1
-    Buffer<fftwf_complex> multiply_out_a;
-    Buffer<fftwf_complex> multiply_out_b;
-    
-    // temporaries used to store the time domain outputs before cross fading, size 2n
-    Buffer<float> out_td_a;
-    Buffer<float> out_td_b;
+    // Temporaries used by filter_block to store the padded and faded inputs; size 2n, the second half should always be zeros.
+    Buffer<float> current_td_old;
+    Buffer<float> current_td_new;
+    // Temporary used by filter_block to store the multiplied spectrum; size n+1.
+    Buffer<fftwf_complex> multiply_out;
+    // Temporary used to store the time domain output, size 2n.
+    Buffer<float> out_td;
 };
 
 BBC_AUDIOTOOLBOX_END

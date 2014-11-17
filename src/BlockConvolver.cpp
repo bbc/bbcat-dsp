@@ -93,17 +93,18 @@ BlockConvolver::BlockConvolver(Context *context, size_t block_size, size_t num_b
   ,filter_queue(num_blocks + 1, NULL)
   ,filter_ofs(0)
   ,spectra_ofs(0)
-  ,current_td(TD_SIZE)
-  ,multiply_out_a(FD_SIZE)
-  ,multiply_out_b(FD_SIZE)
-  ,out_td_a(TD_SIZE)
-  ,out_td_b(TD_SIZE)
+  ,last_tail(block_size)
+  ,current_td_old(TD_SIZE)
+  ,current_td_new(TD_SIZE)
+  ,multiply_out(FD_SIZE)
+  ,out_td(TD_SIZE)
 {
   assert(context->block_size == block_size);
   
   for (size_t i = 0; i < num_blocks; i++)
   {
-    spectra_queue.emplace_back(FD_SIZE);
+    spectra_queue_old.emplace_back(FD_SIZE);
+    spectra_queue_new.emplace_back(FD_SIZE);
   }
 }
 
@@ -179,16 +180,22 @@ void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, siz
 #endif
 }
 
-void fade_output_norm(float *out, float *a, float *b, size_t n)
+void mix_into(float *a, float *b, size_t n)
 {
-  float norm = 1.0 / (2 * n);
+  for (size_t i = 0; i < n; i++)
+    a[i] += b[i];
+}
+
+void fade_down_and_up(float *in, float *down, float *up, size_t n)
+{
   float i_scale = 1.0 / (n-1);
   
   for (size_t i = 0; i < n; i++)
   {
-    float b_v = (float)i * i_scale;
-    float a_v = 1.0f - b_v;
-    out[i] = (a_v * a[i] + b_v * b[i]) * norm;
+    float a_v = (float)i * i_scale;
+    float b_v = 1.0f - a_v;
+    up[i]   = a_v * in[i];
+    down[i] = b_v * in[i];
   }
 }
 
@@ -214,93 +221,68 @@ bool all_zeros(float *in, size_t len) {
 
 void BlockConvolver::filter_block(float *in, float *out)
 {
-  bool in_zeros = all_zeros(in, block_size);
-  
-  // fill second half of current_td with in
-  if (in_zeros) {
-    // clear the second half if necessary, without touching the zero flag.
-    if (!current_td.zero) memset(current_td.data.get() + block_size, 0, block_size * sizeof(float));
-  } else
-    memcpy(current_td.write_ptr() + block_size, in, block_size * sizeof(float));
-  
-  // fft to spectra_queue[0]
-  if (current_td.zero)
-    spectra_queue[SPECTRA_IDX(0)].clear();
-  else
-    fftwf_execute_dft_r2c(context->td_to_fd, current_td.read_ptr(), spectra_queue[SPECTRA_IDX(0)].write_ptr());
-  
-  // fill first half of current_td with in, for use in the next block; the second half is never used
-  if (in_zeros)
-    current_td.clear();
-  else
-    memcpy(current_td.write_ptr(), in, block_size * sizeof(float));
+  // Pad and fft in into spectra_queue_old and spectra_queue_new, fading if necessary.
+  if (all_zeros(in, block_size)) {
+    // zero if input is zero
+    spectra_queue_old[SPECTRA_IDX(0)].clear();
+    spectra_queue_new[SPECTRA_IDX(0)].clear();
+  } else {
+    // has the filter changed?
+    if (filter_queue[FILTER_IDX(1)] != filter_queue[FILTER_IDX(0)]) {
+      // if so, produce a version fading down in current_td_old and up in current_td_new, then fft both
+      fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), block_size);
+      fftwf_execute_dft_r2c(context->td_to_fd, current_td_old.read_ptr(), spectra_queue_old[SPECTRA_IDX(0)].write_ptr());
+      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_queue_new[SPECTRA_IDX(0)].write_ptr());
+    } else {
+      // otherwise just fft directly to new spectra
+      memcpy(current_td_new.write_ptr(), in, block_size * sizeof(float));
+      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_queue_new[SPECTRA_IDX(0)].write_ptr());
+      spectra_queue_old[SPECTRA_IDX(0)].clear();
+    }
+  }
   
   // Multiply the spectra of all filters with the corresponding input spectra,
-  // summing into multiply_out_a, for blocks where a crossfade is not needed.
-  // Set need_crossfade if any blocks that need crossfading are encountered.
-  multiply_out_a.clear();
-  bool need_crossfade = false;
+  // summing into multiply_out. Blocks in spectra_queue_new are multiplied with
+  // the current filter block, and spectra_queue_old with the previous filter
+  // block.
+  multiply_out.clear();
   for (size_t i = 0; i < num_blocks; i++)
   {
-    if (spectra_queue[SPECTRA_IDX(i)].zero) continue;
     const Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
     const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
     
-    if (old_filter == new_filter) {
-      if (new_filter != NULL && i <= new_filter->blocks.size())
-        complex_mul_sum(
-            multiply_out_a.write_ptr(),
-            new_filter->blocks[i].get(),
-            spectra_queue[SPECTRA_IDX(i)].read_ptr(),
-            FD_SIZE);
-    } else
-      need_crossfade = true;
+    if (old_filter != NULL && i <= old_filter->blocks.size() && !spectra_queue_old[SPECTRA_IDX(i)].zero)
+      complex_mul_sum(
+          multiply_out.write_ptr(),
+          old_filter->blocks[i].get(),
+          spectra_queue_old[SPECTRA_IDX(i)].read_ptr(),
+          FD_SIZE);
+    if (new_filter != NULL && i <= new_filter->blocks.size() && !spectra_queue_new[SPECTRA_IDX(i)].zero)
+      complex_mul_sum(
+          multiply_out.write_ptr(),
+          new_filter->blocks[i].get(),
+          spectra_queue_new[SPECTRA_IDX(i)].read_ptr(),
+          FD_SIZE);
   }
   
-  if (need_crossfade) {
-    // Copy multiply_out_a (containing all output blocks that don't need
-    // crossfading) into multiply_out_b, then sum the old and new outputs into
-    // multiply_out_a and multiply_out_b, respectively.
-    memcpy(multiply_out_b.write_ptr(), multiply_out_a.read_ptr(), FD_SIZE * sizeof(fftwf_complex));
-    multiply_out_a.zero = multiply_out_b.zero;
-    for (size_t i = 0; i < num_blocks; i++)
-    {
-      if (spectra_queue[SPECTRA_IDX(i)].zero) continue;
-      const Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
-      const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
-      
-      if (old_filter != new_filter) {
-        if (old_filter != NULL && i <= old_filter->blocks.size())
-          complex_mul_sum(
-              multiply_out_a.write_ptr(),
-              old_filter->blocks[i].get(),
-              spectra_queue[SPECTRA_IDX(i)].read_ptr(),
-              FD_SIZE);
-        if (new_filter != NULL && i <= new_filter->blocks.size())
-          complex_mul_sum(
-              multiply_out_b.write_ptr(),
-              new_filter->blocks[i].get(),
-              spectra_queue[SPECTRA_IDX(i)].read_ptr(),
-              FD_SIZE);
-      }
-    }
-
-    // fft multiply_out_a and multiply_out_b into out_td_a and out_td_b, then
-    // crossfade the second half of these to the output.
-    if (!multiply_out_a.zero || !multiply_out_b.zero) {
-      fftwf_execute_dft_c2r(context->fd_to_td, multiply_out_a.write_ptr(), out_td_a.read_ptr());
-      fftwf_execute_dft_c2r(context->fd_to_td, multiply_out_b.write_ptr(), out_td_b.read_ptr());
-      fade_output_norm(out, out_td_a.read_ptr() + block_size, out_td_b.read_ptr() + block_size, block_size);
-    } else
-      memset(out, 0, block_size * sizeof(float));
+  // Inverse fft, then send the first half plus the last tail to the output,
+  // and write the second half to last_tail, to be used in the next block.
+  if (!multiply_out.zero) {
+    fftwf_execute_dft_c2r(context->fd_to_td, multiply_out.read_ptr(), out_td.write_ptr());
+    
+    // Mix last_tail into the first half out_td, and replace last_tail with the second half of out_td.
+    if (!last_tail.zero)
+      mix_into(out_td.write_ptr(), last_tail.read_ptr(), block_size);
+    memcpy(last_tail.write_ptr(), out_td.read_ptr() + block_size, block_size * sizeof(float));
+    
+    output_norm(out, out_td.read_ptr(), block_size);
+  } else if (!last_tail.zero) {
+    // no spectra, just send the last tail if nonzero
+    output_norm(out, last_tail.read_ptr(), block_size);
+    last_tail.clear();
   } else {
-    // All blocks were summed into multiply_out_a; fft this into out_td_a, and
-    // copy the second half to the output.
-    if (!multiply_out_a.zero) {
-      fftwf_execute_dft_c2r(context->fd_to_td, multiply_out_a.write_ptr(), out_td_a.read_ptr());
-      output_norm(out, out_td_a.read_ptr() + block_size, block_size);
-    } else
-      memset(out, 0, block_size * sizeof(float));
+    // no spectra or last tail, zero the output
+    memset(out, 0, block_size * sizeof(float));
   }
   
   // older blocks are at higher indices, so move spectra_ofs and filter_ofs left, with wrap-around
