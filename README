@@ -4,7 +4,6 @@ bbcat-dsp is a general purpose DSP library which forms the basis of the Audio To
 
 Dependencies
 
-apf - git@git0.rd.bbc.co.uk:apf/apf.git
 bbcat-base - git@git0.rd.bbc.co.uk:aplibs/bbcat-base.git
 netcdf-bbc - git@git0.rd.bbc.co.uk:aplibs/netcdf-bbc.git (for SOFA file support)
 netcdf-cxx4-bbc - git@git0.rd.bbc.co.uk:aplibs/netcdf-cxx4-bbc.git (for SOFA file support)
@@ -22,7 +21,10 @@ Makefile.am - makefile for automake
 README - this file
 src/ - source folder containing C/C++ source and header files
 
-src/Convolver.cpp                       | Multi-channel parallelized and partitioned convolution using APF
+src/BlockConvolver.cpp                  | Single-channel partitioned convolution
+src/BlockConvolver.h                    |
+
+src/Convolver.cpp                       | Multi-channel parallelized convolution using BlockConvolver
 src/Convolver.h                         |
 
 src/FractionalSample.cpp                | Fractional delay line for floating point samples
