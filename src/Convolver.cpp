@@ -12,7 +12,6 @@
 #include <unistd.h>
 
 #include <sndfile.hh>
-#include <apf/convolver.h>
 
 #define DEBUG_LEVEL 2
 #include <bbcat-base/PerformanceMonitor.h>
