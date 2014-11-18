@@ -125,6 +125,8 @@ void BlockConvolver::set_filter(const Filter *filter)
     filter_queue[i] = filter;
 }
 
+/** Complex multiply and sum; C++ version.
+ *  implements out[i] += a[i] * b[i] for 0 <= i < n */
 void complex_mul_sum_cpp(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
 {
   for (size_t i = 0; i < n; i++) {
@@ -135,6 +137,7 @@ void complex_mul_sum_cpp(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b,
 }
 
 #ifdef __SSE3__
+/** Complex multiplication of a and b using SSE */
 inline __m128 complex_mul_pair_ps(__m128 a, __m128 b)
 {
   __m128 a_r = _mm_moveldup_ps(a);
@@ -145,6 +148,11 @@ inline __m128 complex_mul_pair_ps(__m128 a, __m128 b)
   return _mm_addsub_ps(tmp1, tmp2);
 }
 
+/** Complex multiply and sum of two pairs of complex numbers using SSE.
+ *  implements:
+ *    out[0] += a[0] * b[0];
+ *    out[1] += a[1] * b[1];
+ */
 inline void complex_mul_pair_accumulate(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b)
 {
   __m128 av = _mm_load_ps((float *)a);
@@ -156,6 +164,8 @@ inline void complex_mul_pair_accumulate(fftwf_complex *out, fftwf_complex *a, ff
   _mm_store_ps((float *)out, out_new);
 }
 
+/** Complex multiply and sum; SSE version.
+ *  implements out[i] += a[i] * b[i] for 0 <= i < n */
 void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
 {
   assert(2 * sizeof(fftwf_complex) == 4 * sizeof(float));
@@ -171,6 +181,8 @@ void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b,
 }
 #endif
 
+/** Complex multiply and sum; this uses SSE if available.
+ *  implements out[i] += a[i] * b[i] for 0 <= i < n */
 void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
 {
 #ifdef __SSE3__
@@ -180,14 +192,20 @@ void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, siz
 #endif
 }
 
+/** Mix b into a.
+ *   implements a[i] += b[i] for 0 <= i < n */
 void mix_into(float *a, float *b, size_t n)
 {
   for (size_t i = 0; i < n; i++)
     a[i] += b[i];
 }
 
+/** Produce two versions of the block of n samples in in, one faded down across
+ * the block, and the other faded up across the block.
+ */
 void fade_down_and_up(float *in, float *down, float *up, size_t n)
 {
+  // pull divide out of the loop
   float i_scale = 1.0 / (n-1);
   
   for (size_t i = 0; i < n; i++)
@@ -199,15 +217,19 @@ void fade_down_and_up(float *in, float *down, float *up, size_t n)
   }
 }
 
-void output_norm(float *out, float *a, size_t n)
+/** Normalise the fft output. For a block size of n, this divides n samples by
+ * 2n (the size of fft used).
+ */
+void output_norm(float *out, float *in, size_t n)
 {
   float norm = 1.0 / (2 * n);
   for (size_t i = 0; i < n; i++)
   {
-    out[i] = a[i] * norm;
+    out[i] = in[i] * norm;
   }
 }
 
+/** Is a buffer null or contain all zeros? */
 bool all_zeros(float *in, size_t len) {
   if (in == NULL)
     return true;
