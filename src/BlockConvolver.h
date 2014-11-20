@@ -97,7 +97,7 @@ class BlockConvolver {
       explicit Buffer(size_t len);
       std::unique_ptr<T, void (*)(void*)> data;
       size_t len;
-      bool zero = true;
+      bool zero;
       
       /** Get a pointer to the data for reading. */
       T *read_ptr();

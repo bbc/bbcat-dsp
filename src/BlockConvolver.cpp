@@ -62,6 +62,7 @@ template <typename T>
 BlockConvolver::Buffer<T>::Buffer(size_t len)
   :data((T*)fftwf_malloc(len * sizeof(T)), &fftwf_free)
   ,len(len)
+  ,zero(true)
 {
   memset(data.get(), 0, len * sizeof(T));
 }
