@@ -42,7 +42,7 @@ ConvolverManager::ConvolverManager(uint_t partitionsize) :
   audioscale(1.0),
   hqproc(true),
   updateparameters(true),
-  context(blocksize)
+  context(new BlockConvolver::Context(partitionsize))
 {
   reporttick = GetTickCount();
 }
@@ -63,7 +63,7 @@ ConvolverManager::ConvolverManager(const char *irfile, uint_t partitionsize, con
   audioscale(1.f),
   hqproc(true),
   updateparameters(true),
-  context(blocksize)
+  context(new BlockConvolver::Context(partitionsize))
 {
   reporttick = GetTickCount();
   LoadIRs(irfile, fade);
@@ -88,7 +88,7 @@ ConvolverManager::ConvolverManager(const char *irfile, const char *irdelayfile, 
   audioscale(1.f),
   hqproc(true),
   updateparameters(true),
-  context(blocksize)
+  context(new BlockConvolver::Context(partitionsize))
 {
   reporttick = GetTickCount();
   LoadIRs(irfile, fade);
@@ -115,6 +115,7 @@ void ConvolverManager::SetPartitionSize(uint_t partitionsize)
   if (!convolvers.size())
   {
     blocksize = partitionsize;
+    context.reset(new BlockConvolver::Context(partitionsize));
   }
   else ERROR("Trying to change partition size in ConvolverManager AFTER creating convolvers");
 }
@@ -250,7 +251,7 @@ void ConvolverManager::CreateIRs(const float *irdata, uint_t numirs, const uint_
 
       memcpy(irdata1, irsrc, filterlen * sizeof(*irsrc));
       ApplyFades(irdata1, filterlen, fadein, fadeout);
-      filters.push_back(BlockConvolver::Filter(&context, blocksize, filterlen, irdata1));
+      filters.push_back(BlockConvolver::Filter(context.get(), blocksize, filterlen, irdata1));
 
 #if MEASURE_MAX_FILTER_LEVEL
       float filterlevel = CalculateLevel(irdata1, filterlen);
@@ -400,7 +401,7 @@ bool ConvolverManager::LoadIRsSndFile(const char *filename, const FILTER_FADE& f
 
         TransferSamples(sampledata + filterstart * n, i, n, response, 0, 1, 1, filterlen);
         ApplyFades(response, filterlen, fadein, fadeout);
-        filters.push_back(BlockConvolver::Filter(&context, blocksize, filterlen, response));
+        filters.push_back(BlockConvolver::Filter(context.get(), blocksize, filterlen, response));
 
 #if MEASURE_MAX_FILTER_LEVEL
         float filterlevel = CalculateLevel(response, filterlen);
@@ -555,7 +556,7 @@ void ConvolverManager::CreateStaticConvolver(SOFA& file, uint_t index, double de
 
   // apply fades and create filter
   ApplyFades(irdata, buffer.size(), convolverdata.fadein, convolverdata.fadeout);
-  filters.push_back(BlockConvolver::Filter(&context, blocksize, buffer.size(), irdata));
+  filters.push_back(BlockConvolver::Filter(context.get(), blocksize, buffer.size(), irdata));
 
   delay *= convolverdata.samplerate;
 
@@ -566,7 +567,7 @@ void ConvolverManager::CreateStaticConvolver(SOFA& file, uint_t index, double de
   params.level = 1.0;
   parameters.push_back(params);
 
-  Convolver *conv = new Convolver(&context, convolvers.size(), blocksize, partitions, delay);
+  Convolver *conv = new Convolver(context.get(), convolvers.size(), blocksize, partitions, delay);
   conv->SetParameters(params.level, params.delay, hqproc);
   convolvers.push_back(conv);
 }
@@ -586,7 +587,7 @@ void ConvolverManager::SetConvolverCount(uint_t nconvolvers)
   while (convolvers.size() < nconvolvers)
   {
     // set up new convolver
-    Convolver *conv = new Convolver(&context, convolvers.size(), blocksize, partitions);
+    Convolver *conv = new Convolver(context.get(), convolvers.size(), blocksize, partitions);
     convolvers.push_back(conv);
 
     // set default IR
@@ -815,7 +816,7 @@ void ConvolverManager::LoadIRsSOFA(SOFA& file, const FILTER_FADE& fade)
         CopyIRData(file, GetSOFAOffset(file, ie, im, ir), + filterstart, filterlen, buffer);
         float *irdata1 = &buffer[0];
         ApplyFades(irdata1, filterlen, fadein, fadeout);
-        filters.push_back(BlockConvolver::Filter(&context, blocksize, filterlen, irdata1));
+        filters.push_back(BlockConvolver::Filter(context.get(), blocksize, filterlen, irdata1));
 
 #if MEASURE_MAX_FILTER_LEVEL
         float filterlevel = CalculateLevel(irdata1, filterlen);

@@ -12,6 +12,7 @@
 #include <vector>
 #include <pthread.h>
 #include <semaphore.h>
+#include <memory>
 
 #include <bbcat-base/misc.h>
 #include <bbcat-base/ThreadLock.h>
@@ -327,7 +328,7 @@ protected:
   bool                     hqproc;
   bool                     updateparameters;
 
-  BlockConvolver::Context context;
+  std::unique_ptr<BlockConvolver::Context> context;
 };
 
 class Convolver
