@@ -274,13 +274,13 @@ void BlockConvolver::filter_block(float *in, float *out)
     const Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
     const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
     
-    if (old_filter != NULL && i <= old_filter->blocks.size() && !spectra_queue_old[SPECTRA_IDX(i)].zero)
+    if (old_filter != NULL && i < old_filter->blocks.size() && !spectra_queue_old[SPECTRA_IDX(i)].zero)
       complex_mul_sum(
           multiply_out.write_ptr(),
           old_filter->blocks[i].get(),
           spectra_queue_old[SPECTRA_IDX(i)].read_ptr(),
           FD_SIZE);
-    if (new_filter != NULL && i <= new_filter->blocks.size() && !spectra_queue_new[SPECTRA_IDX(i)].zero)
+    if (new_filter != NULL && i < new_filter->blocks.size() && !spectra_queue_new[SPECTRA_IDX(i)].zero)
       complex_mul_sum(
           multiply_out.write_ptr(),
           new_filter->blocks[i].get(),
