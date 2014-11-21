@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = foreign
 
 include doxygen.am
 
-SUBDIRS = src
+SUBDIRS = src test
 
 EXTRA_DIST = README COPYING autogen.sh
 

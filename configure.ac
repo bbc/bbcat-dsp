@@ -183,6 +183,10 @@ if test "x${ENABLE_SOFA}" = "xyes"; then
   fi
 fi
 
+LIBBOOST_VER="1.49.0"
+AX_BOOST_BASE($LIBBOOST_VER, HAVE_BOOST=yes, HAVE_BOOST=no)
+AX_BOOST_UNIT_TEST_FRAMEWORK
+
 AC_APPEND_SUPPORTED_CFLAGS(BBCAT_DSP_CFLAGS, [-Wall])
 #AC_APPEND_SUPPORTED_CFLAGS(BBCAT_DSP_CFLAGS, [-Werror])
 AC_APPEND_SUPPORTED_CFLAGS(BBCAT_DSP_CFLAGS, [-Wextra])
@@ -215,5 +219,6 @@ Makefile
 bbcat-dsp-uninstalled.pc
 bbcat-dsp.pc
 src/Makefile
+test/Makefile
 ])
 AC_OUTPUT
