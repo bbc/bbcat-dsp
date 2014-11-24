@@ -58,6 +58,7 @@ BlockConvolver::Filter::Filter(Context *context, size_t block_size, size_t filte
   free(td);
 }
 
+
 template <typename T>
 BlockConvolver::Buffer<T>::Buffer(size_t len)
   :data((T*)fftwf_malloc(len * sizeof(T)), &fftwf_free)
@@ -84,8 +85,6 @@ void BlockConvolver::Buffer<T>::clear() {
   memset(data.get(), 0, len * sizeof(T));
 }
 
-#define SPECTRA_IDX(i) ((spectra_ofs + (i)) % num_blocks)
-#define FILTER_IDX(i) ((filter_ofs + (i)) % (num_blocks + 1))
 
 BlockConvolver::BlockConvolver(Context *context, size_t block_size, size_t num_blocks)
   :context(context)
@@ -117,7 +116,7 @@ void BlockConvolver::crossfade_filter(const Filter *filter)
     assert(filter->num_blocks() <= num_blocks);
   }
   
-  filter_queue[FILTER_IDX(0)] = filter;
+  filters(0) = filter;
 }
 
 void BlockConvolver::set_filter(const Filter *filter)
@@ -130,6 +129,31 @@ void BlockConvolver::set_filter(const Filter *filter)
   
   for (size_t i = 0; i < filter_queue.size(); i++)
     filter_queue[i] = filter;
+}
+
+const BlockConvolver::Filter *&BlockConvolver::filters(size_t i)
+{
+  return filter_queue[(filter_ofs + i) % (num_blocks + 1)];
+}
+
+BlockConvolver::Buffer<fftwf_complex> &BlockConvolver::spectra_old(size_t i)
+{
+  return spectra_queue_old[(spectra_ofs + i) % num_blocks];
+}
+
+BlockConvolver::Buffer<fftwf_complex> &BlockConvolver::spectra_new(size_t i)
+{
+  return spectra_queue_new[(spectra_ofs + i) % num_blocks];
+}
+
+void BlockConvolver::rotate_queues()
+{
+  // older blocks are at higher indices, so move spectra_ofs and filter_ofs left, with wrap-around
+  spectra_ofs = (spectra_ofs + num_blocks - 1) % num_blocks;
+  filter_ofs = (filter_ofs + (num_blocks + 1) - 1) % (num_blocks + 1);
+  
+  // By default the next filter to use is the previous.
+  filters(0) = filters(1);
 }
 
 /** Complex multiply and sum; C++ version.
@@ -255,25 +279,25 @@ void BlockConvolver::filter_block(float *in, float *out)
   // Pad and fft in into spectra_queue_old and spectra_queue_new, fading if necessary.
   if (all_zeros(in, block_size)) {
     // zero if input is zero
-    spectra_queue_old[SPECTRA_IDX(0)].clear();
-    spectra_queue_new[SPECTRA_IDX(0)].clear();
+    spectra_old(0).clear();
+    spectra_new(0).clear();
   } else {
     // has the filter changed?
-    if (filter_queue[FILTER_IDX(1)] != filter_queue[FILTER_IDX(0)]) {
+    if (filters(1) != filters(0)) {
       // if so, produce a version fading down in current_td_old and up in current_td_new, then fft both
       fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), block_size);
       // clear the second half as this may have been modified by fftw
       memset(current_td_old.write_ptr() + block_size, 0, block_size * sizeof(float));
       memset(current_td_new.write_ptr() + block_size, 0, block_size * sizeof(float));
-      fftwf_execute_dft_r2c(context->td_to_fd, current_td_old.read_ptr(), spectra_queue_old[SPECTRA_IDX(0)].write_ptr());
-      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_queue_new[SPECTRA_IDX(0)].write_ptr());
+      fftwf_execute_dft_r2c(context->td_to_fd, current_td_old.read_ptr(), spectra_old(0).write_ptr());
+      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
     } else {
       // otherwise just fft directly to new spectra.
       memcpy(current_td_new.write_ptr(), in, block_size * sizeof(float));
       // clear the second half as this may have been modified by fftw
       memset(current_td_new.write_ptr() + block_size, 0, block_size * sizeof(float));
-      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_queue_new[SPECTRA_IDX(0)].write_ptr());
-      spectra_queue_old[SPECTRA_IDX(0)].clear();
+      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
+      spectra_old(0).clear();
     }
   }
   
@@ -284,20 +308,20 @@ void BlockConvolver::filter_block(float *in, float *out)
   multiply_out.clear();
   for (size_t i = 0; i < num_blocks; i++)
   {
-    const Filter *old_filter = filter_queue[FILTER_IDX(i+1)];
-    const Filter *new_filter = filter_queue[FILTER_IDX(i  )];
+    const Filter *old_filter = filters(i+1);
+    const Filter *new_filter = filters(i);
     
-    if (old_filter != NULL && i < old_filter->blocks.size() && !spectra_queue_old[SPECTRA_IDX(i)].zero)
+    if (old_filter != NULL && i < old_filter->blocks.size() && !spectra_old(i).zero)
       complex_mul_sum(
           multiply_out.write_ptr(),
           old_filter->blocks[i].get(),
-          spectra_queue_old[SPECTRA_IDX(i)].read_ptr(),
+          spectra_old(i).read_ptr(),
           FD_SIZE);
-    if (new_filter != NULL && i < new_filter->blocks.size() && !spectra_queue_new[SPECTRA_IDX(i)].zero)
+    if (new_filter != NULL && i < new_filter->blocks.size() && !spectra_new(i).zero)
       complex_mul_sum(
           multiply_out.write_ptr(),
           new_filter->blocks[i].get(),
-          spectra_queue_new[SPECTRA_IDX(i)].read_ptr(),
+          spectra_new(i).read_ptr(),
           FD_SIZE);
   }
   
@@ -321,17 +345,10 @@ void BlockConvolver::filter_block(float *in, float *out)
     memset(out, 0, block_size * sizeof(float));
   }
   
-  // older blocks are at higher indices, so move spectra_ofs and filter_ofs left, with wrap-around
-  spectra_ofs = (spectra_ofs + num_blocks - 1) % num_blocks;
-  filter_ofs = (filter_ofs + (num_blocks + 1) - 1) % (num_blocks + 1);
-  
-  // By default the next filter to use is the previous.
-  filter_queue[FILTER_IDX(0)] = filter_queue[FILTER_IDX(1)];
+  rotate_queues();
 }
 
 #undef TD_SIZE
 #undef FD_SIZE
-#undef SPECTRA_IDX
-#undef FILTER_IDX
 
 BBC_AUDIOTOOLBOX_END

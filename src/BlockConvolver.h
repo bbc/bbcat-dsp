@@ -111,14 +111,17 @@ class BlockConvolver {
     size_t block_size;
     size_t num_blocks;
     
-    // on each frame, the output is a crossfade between:
-    // - filter_queue[1:] (old)
-    // - filter_queue[:-1] (new)
-    // after filter_block, filter_queue has been shifted one along, with filter_queue[0] left at filter_queue[0]
-    // set_filter simply writes to filter_queue[0].
-    // this should be num_blocks + 1 in length.
+    // filters(i) accesses a circular buffer of filters, length num_blocks + 1.
+    // on each frame, the input is crossfaded up and down, and passed through
+    // - filters[1:] (old)
+    // - filters[:-1] (new)
+    // After filter_block, filters has been shifted one along, with filters(0)
+    // left at filters(1); filters(0) is then set to filters(1), such that the
+    // next filter is the same as the previous by default.
+    // set_filter simply writes to filters(0).
     std::vector<const Filter *> filter_queue;
     size_t filter_ofs;
+    const Filter *&filters(size_t i);
     
     // The spectra of the input, after padding on the right hand side.
     // If the filter is changed before input block i, spectra_queue_old[i]
@@ -130,6 +133,10 @@ class BlockConvolver {
     std::vector<Buffer<fftwf_complex> > spectra_queue_old;
     std::vector<Buffer<fftwf_complex> > spectra_queue_new;
     size_t spectra_ofs;
+    Buffer<fftwf_complex> &spectra_old(size_t i);
+    Buffer<fftwf_complex> &spectra_new(size_t i);
+    
+    void rotate_queues();
     
     // The second half of the ifft output for the last block, added to the first half before output; size n.
     Buffer<float> last_tail;
