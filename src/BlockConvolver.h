@@ -127,8 +127,8 @@ class BlockConvolver {
     // new filter).
     // If the filter is not changed, only spectra_queue_new contains data.
     // num_blocks in length, each of size n+1.
-    std::vector<Buffer<fftwf_complex>> spectra_queue_old;
-    std::vector<Buffer<fftwf_complex>> spectra_queue_new;
+    std::vector<Buffer<fftwf_complex> > spectra_queue_old;
+    std::vector<Buffer<fftwf_complex> > spectra_queue_new;
     int spectra_ofs;
     
     // The second half of the ifft output for the last block, added to the first half before output; size n.
