@@ -238,10 +238,10 @@ BOOST_AUTO_TEST_CASE( single_block )
 {
   BlockConvolver::Context ctx(512);
   ConvolutionTest t(512, 1);
-  t.irs.emplace_back(generate_random<float>(100, 10, 0), 100);
+  t.irs.emplace_back(generate_random<float>(100, 10, 1), 100);
   t.initial_ir = 0;
   t.ir_for_block = {0};
-  t.input = generate_random<float>(512, 200, 1);
+  t.input = generate_random<float>(512, 200, 0);
   t.run(ctx);
 }
 
