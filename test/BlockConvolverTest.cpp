@@ -174,12 +174,12 @@ struct ConvolutionTest {
     // Create filters from irs, while finding the required number of blocks.
     std::vector<BlockConvolver::Filter> filters;
     for (size_t i = 0; i < irs.size(); i++) {
-      BlockConvolver::Filter filter(&ctx, block_size, irs[i].second, irs[i].first.get());
+      BlockConvolver::Filter filter(&ctx, irs[i].second, irs[i].first.get());
       if (filter.num_blocks() > max_num_blocks) max_num_blocks = filter.num_blocks();
       filters.push_back(std::move(filter));
     }
     
-    BlockConvolver convolver(&ctx, block_size, max_num_blocks);
+    BlockConvolver convolver(&ctx, max_num_blocks);
     
     // don't set the starting filter if initial_ir is invalid
     if (initial_ir >= 0)
@@ -228,10 +228,10 @@ BOOST_AUTO_TEST_CASE( filter_correct_num_blocks )
   BlockConvolver::Context ctx(512);
   auto coeff = generate_random<float>(2000, 100);
   
-  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 512, 1, coeff.get()).num_blocks(), 1);
-  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 512, 511, coeff.get()).num_blocks(), 1);
-  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 512, 512, coeff.get()).num_blocks(), 1);
-  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 512, 513, coeff.get()).num_blocks(), 2);
+  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 1, coeff.get()).num_blocks(), 1);
+  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 511, coeff.get()).num_blocks(), 1);
+  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 512, coeff.get()).num_blocks(), 1);
+  BOOST_CHECK_EQUAL(BlockConvolver::Filter(&ctx, 513, coeff.get()).num_blocks(), 2);
 }
 
 BOOST_AUTO_TEST_CASE( single_block )

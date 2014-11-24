@@ -252,7 +252,7 @@ void ConvolverManager::CreateIRs(const float *irdata, uint_t numirs, const uint_
 
       memcpy(irdata1, irsrc, filterlen * sizeof(*irsrc));
       ApplyFades(irdata1, filterlen, fadein, fadeout);
-      filters.push_back(BlockConvolver::Filter(context.get(), blocksize, filterlen, irdata1));
+      filters.push_back(BlockConvolver::Filter(context.get(), filterlen, irdata1));
 
 #if MEASURE_MAX_FILTER_LEVEL
       float filterlevel = CalculateLevel(irdata1, filterlen);
@@ -402,7 +402,7 @@ bool ConvolverManager::LoadIRsSndFile(const char *filename, const FILTER_FADE& f
 
         TransferSamples(sampledata + filterstart * n, i, n, response, 0, 1, 1, filterlen);
         ApplyFades(response, filterlen, fadein, fadeout);
-        filters.push_back(BlockConvolver::Filter(context.get(), blocksize, filterlen, response));
+        filters.push_back(BlockConvolver::Filter(context.get(), filterlen, response));
 
 #if MEASURE_MAX_FILTER_LEVEL
         float filterlevel = CalculateLevel(response, filterlen);
@@ -557,7 +557,7 @@ void ConvolverManager::CreateStaticConvolver(SOFA& file, uint_t index, double de
 
   // apply fades and create filter
   ApplyFades(irdata, buffer.size(), convolverdata.fadein, convolverdata.fadeout);
-  filters.push_back(BlockConvolver::Filter(context.get(), blocksize, buffer.size(), irdata));
+  filters.push_back(BlockConvolver::Filter(context.get(), buffer.size(), irdata));
 
   delay *= convolverdata.samplerate;
 
@@ -817,7 +817,7 @@ void ConvolverManager::LoadIRsSOFA(SOFA& file, const FILTER_FADE& fade)
         CopyIRData(file, GetSOFAOffset(file, ie, im, ir), + filterstart, filterlen, buffer);
         float *irdata1 = &buffer[0];
         ApplyFades(irdata1, filterlen, fadein, fadeout);
-        filters.push_back(BlockConvolver::Filter(context.get(), blocksize, filterlen, irdata1));
+        filters.push_back(BlockConvolver::Filter(context.get(), filterlen, irdata1));
 
 #if MEASURE_MAX_FILTER_LEVEL
         float filterlevel = CalculateLevel(irdata1, filterlen);
@@ -984,7 +984,7 @@ Convolver::Convolver(BlockConvolver::Context *ctx, uint_t _convindex, uint_t _bl
   outputdelay(_delay),
   outputlevel(1.0),
   quitthread(false),
-  convolver(ctx, _blocksize, _partitions),
+  convolver(ctx, _partitions),
   current_filter(NULL),
   filter(NULL)
 {

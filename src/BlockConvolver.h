@@ -23,7 +23,14 @@ class BlockConvolver {
         ~Context();
       
       private:
-        size_t block_size;
+        // number of samples in a block
+        const size_t block_size;
+        // time domain size; block_size * 2
+        const size_t td_size;
+        // frequency domain size; block_size + 1
+        const size_t fd_size;
+        
+        // fft plans between time and frequency domain blocks.
         fftwf_plan td_to_fd;
         fftwf_plan fd_to_td;
       
@@ -40,17 +47,16 @@ class BlockConvolver {
         /** Create a new Filter given the block size and coefficients.
          * @param context Context required for transformations; only needed
          *                during construction; must have the same block size.
-         * @param block_size Block size in samples.
          * @param filter_length Length of coefficients in samples.
          * @param coefficients Filter coefficients.
          */
-        Filter(Context *context, size_t block_size, size_t filter_length, float *coefficients);
+        Filter(Context *ctx, size_t filter_length, float *coefficients);
         /** The number of blocks in the filter. */
         size_t num_blocks() const { return blocks.size(); }
 
       private:
-        size_t block_size;
         std::vector<std::unique_ptr<fftwf_complex, void (*)(void*)> > blocks;
+        Context *ctx;
         
       friend class BlockConvolver;
     };
@@ -59,10 +65,9 @@ class BlockConvolver {
      * @param context Context required for transformations. This must be alive
      *                for at least as long as this BlockConvolver, and must
      *                have the same block size.
-     * @param block_size Block size in samples.
      * @param num_blocks Maximum number of blocks of any filter used.
      */
-    BlockConvolver(Context *context, size_t block_size, size_t num_blocks);
+    BlockConvolver(Context *ctx, size_t num_blocks);
     
     /** Pass a block of audio through the filter.
      * @param in Input samples; block_size samples will be read.
@@ -107,8 +112,7 @@ class BlockConvolver {
       void clear();
     };
     
-    Context *context;
-    size_t block_size;
+    Context *ctx;
     size_t num_blocks;
     
     // filters(i) accesses a circular buffer of filters, length num_blocks + 1.
@@ -119,23 +123,26 @@ class BlockConvolver {
     // left at filters(1); filters(0) is then set to filters(1), such that the
     // next filter is the same as the previous by default.
     // set_filter simply writes to filters(0).
+    const Filter *&filters(size_t i);
+    // filter_queue and filter_ofs implement the above circular buffer.
     std::vector<const Filter *> filter_queue;
     size_t filter_ofs;
-    const Filter *&filters(size_t i);
     
-    // The spectra of the input, after padding on the right hand side.
-    // If the filter is changed before input block i, spectra_queue_old[i]
+    // a queue of spectra of the input, after zero padding on the right hand side.
+    // If the filter is changed before the input block i frames ago, spectra_old(i)
     // contains the input faded down (to convolve with the old filter) and
-    // spectra_queue_new[i] contains the input faded up (to convolve with the
+    // spectra_new(i) contains the input faded up (to convolve with the
     // new filter).
-    // If the filter is not changed, only spectra_queue_new contains data.
+    // If the filter is not changed, only spectra_new(i) contains data.
     // num_blocks in length, each of size n+1.
+    Buffer<fftwf_complex> &spectra_old(size_t i);
+    Buffer<fftwf_complex> &spectra_new(size_t i);
+    // implementation the above circular buffer
     std::vector<Buffer<fftwf_complex> > spectra_queue_old;
     std::vector<Buffer<fftwf_complex> > spectra_queue_new;
     size_t spectra_ofs;
-    Buffer<fftwf_complex> &spectra_old(size_t i);
-    Buffer<fftwf_complex> &spectra_new(size_t i);
     
+    // Rotate the filter and spectra queues.
     void rotate_queues();
     
     // The second half of the ifft output for the last block, added to the first half before output; size n.

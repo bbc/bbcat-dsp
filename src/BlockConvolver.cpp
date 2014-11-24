@@ -9,17 +9,16 @@
 
 BBC_AUDIOTOOLBOX_START
 
-#define TD_SIZE (block_size * 2)
-#define FD_SIZE (block_size + 1)
-
 BlockConvolver::Context::Context(size_t block_size)
   :block_size(block_size)
+  ,td_size(block_size * 2)
+  ,fd_size(block_size + 1)
 {
-  float *td = fftwf_alloc_real(TD_SIZE);
-  fftwf_complex *fd = fftwf_alloc_complex(FD_SIZE);
+  float *td = fftwf_alloc_real(td_size);
+  fftwf_complex *fd = fftwf_alloc_complex(fd_size);
   
-  td_to_fd = fftwf_plan_dft_r2c_1d(TD_SIZE, td, fd, FFTW_DESTROY_INPUT | FFTW_MEASURE);
-  fd_to_td = fftwf_plan_dft_c2r_1d(TD_SIZE, fd, td, FFTW_DESTROY_INPUT | FFTW_MEASURE);
+  td_to_fd = fftwf_plan_dft_r2c_1d(td_size, td, fd, FFTW_DESTROY_INPUT | FFTW_MEASURE);
+  fd_to_td = fftwf_plan_dft_c2r_1d(td_size, fd, td, FFTW_DESTROY_INPUT | FFTW_MEASURE);
   
   fftwf_free(td);
   fftwf_free(fd);
@@ -31,24 +30,23 @@ BlockConvolver::Context::~Context()
   fftwf_destroy_plan(fd_to_td);
 }
 
-BlockConvolver::Filter::Filter(Context *context, size_t block_size, size_t filter_length, float *coefficients)
-  :block_size(block_size)
-{
-  assert(context->block_size == block_size);
 
-  float *td = fftwf_alloc_real(TD_SIZE);
+BlockConvolver::Filter::Filter(Context *ctx, size_t filter_length, float *coefficients)
+  :ctx(ctx)
+{
+  float *td = fftwf_alloc_real(ctx->td_size);
   
-  for (size_t offset = 0; offset < filter_length; offset += block_size)
+  for (size_t offset = 0; offset < filter_length; offset += ctx->block_size)
   {
-    size_t this_block_size = offset + block_size < filter_length ? block_size : filter_length - offset;
+    size_t this_block_size = offset + ctx->block_size < filter_length ? ctx->block_size : filter_length - offset;
     
     // copy to the first half (or less) of td, and zero the second half
     memcpy(td, coefficients + offset, this_block_size * sizeof(*coefficients));
-    memset(td + this_block_size, 0, (TD_SIZE - this_block_size) * sizeof(*coefficients));
+    memset(td + this_block_size, 0, (ctx->td_size - this_block_size) * sizeof(*coefficients));
     
     // fft into fd
-    fftwf_complex *fd = fftwf_alloc_complex(FD_SIZE);
-    fftwf_execute_dft_r2c(context->td_to_fd, td, fd);
+    fftwf_complex *fd = fftwf_alloc_complex(ctx->fd_size);
+    fftwf_execute_dft_r2c(ctx->td_to_fd, td, fd);
     
     blocks.emplace_back(
         std::unique_ptr<fftwf_complex, void (*)(void*)>(fd, &fftwf_free)
@@ -86,25 +84,22 @@ void BlockConvolver::Buffer<T>::clear() {
 }
 
 
-BlockConvolver::BlockConvolver(Context *context, size_t block_size, size_t num_blocks)
-  :context(context)
-  ,block_size(block_size)
+BlockConvolver::BlockConvolver(Context *ctx, size_t num_blocks)
+  :ctx(ctx)
   ,num_blocks(num_blocks)
   ,filter_queue(num_blocks + 1, NULL)
   ,filter_ofs(0)
   ,spectra_ofs(0)
-  ,last_tail(block_size)
-  ,current_td_old(TD_SIZE)
-  ,current_td_new(TD_SIZE)
-  ,multiply_out(FD_SIZE)
-  ,out_td(TD_SIZE)
+  ,last_tail(ctx->block_size)
+  ,current_td_old(ctx->td_size)
+  ,current_td_new(ctx->td_size)
+  ,multiply_out(ctx->fd_size)
+  ,out_td(ctx->td_size)
 {
-  assert(context->block_size == block_size);
-  
   for (size_t i = 0; i < num_blocks; i++)
   {
-    spectra_queue_old.emplace_back(FD_SIZE);
-    spectra_queue_new.emplace_back(FD_SIZE);
+    spectra_queue_old.emplace_back(ctx->fd_size);
+    spectra_queue_new.emplace_back(ctx->fd_size);
   }
 }
 
@@ -112,7 +107,7 @@ void BlockConvolver::crossfade_filter(const Filter *filter)
 {
   if (filter != NULL)
   {
-    assert(filter->block_size == block_size);
+    assert(filter->ctx->block_size == ctx->block_size);
     assert(filter->num_blocks() <= num_blocks);
   }
   
@@ -123,7 +118,7 @@ void BlockConvolver::set_filter(const Filter *filter)
 {
   if (filter != NULL)
   {
-    assert(filter->block_size == block_size);
+    assert(filter->ctx->block_size == ctx->block_size);
     assert(filter->num_blocks() <= num_blocks);
   }
   
@@ -277,7 +272,7 @@ bool all_zeros(float *in, size_t len) {
 void BlockConvolver::filter_block(float *in, float *out)
 {
   // Pad and fft in into spectra_queue_old and spectra_queue_new, fading if necessary.
-  if (all_zeros(in, block_size)) {
+  if (all_zeros(in, ctx->block_size)) {
     // zero if input is zero
     spectra_old(0).clear();
     spectra_new(0).clear();
@@ -285,18 +280,18 @@ void BlockConvolver::filter_block(float *in, float *out)
     // has the filter changed?
     if (filters(1) != filters(0)) {
       // if so, produce a version fading down in current_td_old and up in current_td_new, then fft both
-      fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), block_size);
+      fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), ctx->block_size);
       // clear the second half as this may have been modified by fftw
-      memset(current_td_old.write_ptr() + block_size, 0, block_size * sizeof(float));
-      memset(current_td_new.write_ptr() + block_size, 0, block_size * sizeof(float));
-      fftwf_execute_dft_r2c(context->td_to_fd, current_td_old.read_ptr(), spectra_old(0).write_ptr());
-      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
+      memset(current_td_old.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(float));
+      memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(float));
+      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_old.read_ptr(), spectra_old(0).write_ptr());
+      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
     } else {
       // otherwise just fft directly to new spectra.
-      memcpy(current_td_new.write_ptr(), in, block_size * sizeof(float));
+      memcpy(current_td_new.write_ptr(), in, ctx->block_size * sizeof(float));
       // clear the second half as this may have been modified by fftw
-      memset(current_td_new.write_ptr() + block_size, 0, block_size * sizeof(float));
-      fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
+      memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(float));
+      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
       spectra_old(0).clear();
     }
   }
@@ -316,39 +311,36 @@ void BlockConvolver::filter_block(float *in, float *out)
           multiply_out.write_ptr(),
           old_filter->blocks[i].get(),
           spectra_old(i).read_ptr(),
-          FD_SIZE);
+          ctx->fd_size);
     if (new_filter != NULL && i < new_filter->blocks.size() && !spectra_new(i).zero)
       complex_mul_sum(
           multiply_out.write_ptr(),
           new_filter->blocks[i].get(),
           spectra_new(i).read_ptr(),
-          FD_SIZE);
+          ctx->fd_size);
   }
   
   // Inverse fft, then send the first half plus the last tail to the output,
   // and write the second half to last_tail, to be used in the next block.
   if (!multiply_out.zero) {
-    fftwf_execute_dft_c2r(context->fd_to_td, multiply_out.read_ptr(), out_td.write_ptr());
+    fftwf_execute_dft_c2r(ctx->fd_to_td, multiply_out.read_ptr(), out_td.write_ptr());
     
     // Mix last_tail into the first half out_td, and replace last_tail with the second half of out_td.
     if (!last_tail.zero)
-      mix_into(out_td.write_ptr(), last_tail.read_ptr(), block_size);
-    memcpy(last_tail.write_ptr(), out_td.read_ptr() + block_size, block_size * sizeof(float));
+      mix_into(out_td.write_ptr(), last_tail.read_ptr(), ctx->block_size);
+    memcpy(last_tail.write_ptr(), out_td.read_ptr() + ctx->block_size, ctx->block_size * sizeof(float));
     
-    output_norm(out, out_td.read_ptr(), block_size);
+    output_norm(out, out_td.read_ptr(), ctx->block_size);
   } else if (!last_tail.zero) {
     // no spectra, just send the last tail if nonzero
-    output_norm(out, last_tail.read_ptr(), block_size);
+    output_norm(out, last_tail.read_ptr(), ctx->block_size);
     last_tail.clear();
   } else {
     // no spectra or last tail, zero the output
-    memset(out, 0, block_size * sizeof(float));
+    memset(out, 0, ctx->block_size * sizeof(float));
   }
   
   rotate_queues();
 }
-
-#undef TD_SIZE
-#undef FD_SIZE
 
 BBC_AUDIOTOOLBOX_END
