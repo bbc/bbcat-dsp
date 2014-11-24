@@ -10,6 +10,7 @@
 
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <sndfile.hh>
 
