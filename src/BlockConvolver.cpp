@@ -67,7 +67,7 @@ BlockConvolver::Buffer<T>::Buffer(size_t len)
 }
 
 template <typename T>
-T *BlockConvolver::Buffer<T>::read_ptr() {
+const T *BlockConvolver::Buffer<T>::read_ptr() {
   return data.get();
 }
 
@@ -153,7 +153,7 @@ void BlockConvolver::rotate_queues()
 
 /** Complex multiply and sum; C++ version.
  *  implements out[i] += a[i] * b[i] for 0 <= i < n */
-void complex_mul_sum_cpp(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
+void complex_mul_sum_cpp(fftwf_complex *out, const fftwf_complex *a, const fftwf_complex *b, size_t n)
 {
   for (size_t i = 0; i < n; i++) {
     // implement out[i] += a[i] * b[i]:
@@ -179,7 +179,7 @@ inline __m128 complex_mul_pair_ps(__m128 a, __m128 b)
  *    out[0] += a[0] * b[0];
  *    out[1] += a[1] * b[1];
  */
-inline void complex_mul_pair_accumulate(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b)
+inline void complex_mul_pair_accumulate(fftwf_complex *out, const fftwf_complex *a, const fftwf_complex *b)
 {
   __m128 av = _mm_load_ps((float *)a);
   __m128 bv = _mm_load_ps((float *)b);
@@ -192,7 +192,7 @@ inline void complex_mul_pair_accumulate(fftwf_complex *out, fftwf_complex *a, ff
 
 /** Complex multiply and sum; SSE version.
  *  implements out[i] += a[i] * b[i] for 0 <= i < n */
-void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
+void complex_mul_sum_sse(fftwf_complex *out, const fftwf_complex *a, const fftwf_complex *b, size_t n)
 {
   assert(2 * sizeof(fftwf_complex) == 4 * sizeof(float));
   
@@ -211,7 +211,7 @@ void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b,
 
 /** Complex multiply and sum; this uses SSE if available.
  *  implements out[i] += a[i] * b[i] for 0 <= i < n */
-void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, size_t n)
+void complex_mul_sum(fftwf_complex *out, const fftwf_complex *a, const fftwf_complex *b, size_t n)
 {
 #ifdef __SSE3__
   complex_mul_sum_sse(out, a, b, n);
@@ -222,7 +222,7 @@ void complex_mul_sum(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b, siz
 
 /** Mix b into a.
  *   implements a[i] += b[i] for 0 <= i < n */
-void mix_into(float *a, float *b, size_t n)
+void mix_into(float *a, const float *b, size_t n)
 {
   for (size_t i = 0; i < n; i++)
     a[i] += b[i];
@@ -231,7 +231,7 @@ void mix_into(float *a, float *b, size_t n)
 /** Produce two versions of the block of n samples in in, one faded down across
  * the block, and the other faded up across the block.
  */
-void fade_down_and_up(float *in, float *down, float *up, size_t n)
+void fade_down_and_up(const float *in, float *down, float *up, size_t n)
 {
   // pull divide out of the loop
   float i_scale = 1.0 / (n-1);
@@ -248,7 +248,7 @@ void fade_down_and_up(float *in, float *down, float *up, size_t n)
 /** Normalise the fft output. For a block size of n, this divides n samples by
  * 2n (the size of fft used).
  */
-void output_norm(float *out, float *in, size_t n)
+void output_norm(float *out, const float *in, size_t n)
 {
   float norm = 1.0 / (2 * n);
   for (size_t i = 0; i < n; i++)
@@ -258,7 +258,7 @@ void output_norm(float *out, float *in, size_t n)
 }
 
 /** Is a buffer null or contain all zeros? */
-bool all_zeros(float *in, size_t len) {
+bool all_zeros(const float *in, size_t len) {
   if (in == NULL)
     return true;
   
@@ -269,7 +269,7 @@ bool all_zeros(float *in, size_t len) {
   return true;
 }
 
-void BlockConvolver::filter_block(float *in, float *out)
+void BlockConvolver::filter_block(const float *in, float *out)
 {
   // Pad and fft in into spectra_queue_old and spectra_queue_new, fading if necessary.
   if (all_zeros(in, ctx->block_size)) {
@@ -284,14 +284,14 @@ void BlockConvolver::filter_block(float *in, float *out)
       // clear the second half as this may have been modified by fftw
       memset(current_td_old.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(float));
       memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(float));
-      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_old.read_ptr(), spectra_old(0).write_ptr());
-      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
+      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_old.write_ptr(), spectra_old(0).write_ptr());
+      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.write_ptr(), spectra_new(0).write_ptr());
     } else {
       // otherwise just fft directly to new spectra.
       memcpy(current_td_new.write_ptr(), in, ctx->block_size * sizeof(float));
       // clear the second half as this may have been modified by fftw
       memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(float));
-      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.read_ptr(), spectra_new(0).write_ptr());
+      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.write_ptr(), spectra_new(0).write_ptr());
       spectra_old(0).clear();
     }
   }
@@ -323,7 +323,7 @@ void BlockConvolver::filter_block(float *in, float *out)
   // Inverse fft, then send the first half plus the last tail to the output,
   // and write the second half to last_tail, to be used in the next block.
   if (!multiply_out.zero) {
-    fftwf_execute_dft_c2r(ctx->fd_to_td, multiply_out.read_ptr(), out_td.write_ptr());
+    fftwf_execute_dft_c2r(ctx->fd_to_td, multiply_out.write_ptr(), out_td.write_ptr());
     
     // Mix last_tail into the first half out_td, and replace last_tail with the second half of out_td.
     if (!last_tail.zero)

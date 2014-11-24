@@ -56,7 +56,7 @@ class BlockConvolver {
 
       private:
         std::vector<std::unique_ptr<fftwf_complex, void (*)(void*)> > blocks;
-        Context *ctx;
+        const Context *ctx;
         
       friend class BlockConvolver;
     };
@@ -73,7 +73,7 @@ class BlockConvolver {
      * @param in Input samples; block_size samples will be read.
      * @param out Output samples; block_size samples will be written.
      */
-    void filter_block(float *in, float *out);
+    void filter_block(const float *in, float *out);
     
     /** Crossfade to a new filter during the next block.
      * 
@@ -102,19 +102,19 @@ class BlockConvolver {
       public:
         explicit Buffer(size_t len);
         std::unique_ptr<T, void (*)(void*)> data;
-        size_t len;
+        const size_t len;
         bool zero;
         
         /** Get a pointer to the data for reading. */
-        T *read_ptr();
+        const T *read_ptr();
         /** Get a pointer to the data for writing; clears the zero flag. */
         T *write_ptr();
         /** Zero the buffer and set the zero flag. */
         void clear();
     };
     
-    Context *ctx;
-    size_t num_blocks;
+    const Context *ctx;
+    const size_t num_blocks;
     
     // filters(i) accesses a circular buffer of filters, length num_blocks + 1.
     // on each frame, the input is crossfaded up and down, and passed through
