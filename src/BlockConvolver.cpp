@@ -322,10 +322,8 @@ void BlockConvolver::filter_block(float *in, float *out)
   }
   
   // older blocks are at higher indices, so move spectra_ofs and filter_ofs left, with wrap-around
-  spectra_ofs--;
-  if (spectra_ofs < 0) spectra_ofs += num_blocks;
-  filter_ofs--;
-  if (filter_ofs < 0) filter_ofs += num_blocks + 1;
+  spectra_ofs = (spectra_ofs + num_blocks - 1) % num_blocks;
+  filter_ofs = (filter_ofs + (num_blocks + 1) - 1) % (num_blocks + 1);
   
   // By default the next filter to use is the previous.
   filter_queue[FILTER_IDX(0)] = filter_queue[FILTER_IDX(1)];

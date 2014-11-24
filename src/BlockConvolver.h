@@ -118,7 +118,7 @@ class BlockConvolver {
     // set_filter simply writes to filter_queue[0].
     // this should be num_blocks + 1 in length.
     std::vector<const Filter *> filter_queue;
-    int filter_ofs;
+    size_t filter_ofs;
     
     // The spectra of the input, after padding on the right hand side.
     // If the filter is changed before input block i, spectra_queue_old[i]
@@ -129,7 +129,7 @@ class BlockConvolver {
     // num_blocks in length, each of size n+1.
     std::vector<Buffer<fftwf_complex> > spectra_queue_old;
     std::vector<Buffer<fftwf_complex> > spectra_queue_new;
-    int spectra_ofs;
+    size_t spectra_ofs;
     
     // The second half of the ifft output for the last block, added to the first half before output; size n.
     Buffer<float> last_tail;
