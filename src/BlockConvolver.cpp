@@ -177,6 +177,8 @@ void complex_mul_sum_sse(fftwf_complex *out, fftwf_complex *a, fftwf_complex *b,
 {
   assert(2 * sizeof(fftwf_complex) == 4 * sizeof(float));
   
+  // Manually unroll this 3 times; this is the fastest on my machine, and
+  // significantly faster than not unrolling.
   size_t offset;
   for (offset = 0; offset + 6 <= n; offset += 6) {
     complex_mul_pair_accumulate(out + offset, a + offset, b + offset);
