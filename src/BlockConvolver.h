@@ -98,18 +98,19 @@ class BlockConvolver {
     /** Buffer which knows if it contains only zeros.
      */
     template <typename T>
-    struct Buffer {
-      explicit Buffer(size_t len);
-      std::unique_ptr<T, void (*)(void*)> data;
-      size_t len;
-      bool zero;
-      
-      /** Get a pointer to the data for reading. */
-      T *read_ptr();
-      /** Get a pointer to the data for writing; clears the zero flag. */
-      T *write_ptr();
-      /** Zero the buffer and set the zero flag. */
-      void clear();
+    class Buffer {
+      public:
+        explicit Buffer(size_t len);
+        std::unique_ptr<T, void (*)(void*)> data;
+        size_t len;
+        bool zero;
+        
+        /** Get a pointer to the data for reading. */
+        T *read_ptr();
+        /** Get a pointer to the data for writing; clears the zero flag. */
+        T *write_ptr();
+        /** Zero the buffer and set the zero flag. */
+        void clear();
     };
     
     Context *ctx;
