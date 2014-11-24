@@ -111,16 +111,22 @@ BlockConvolver::BlockConvolver(Context *context, size_t block_size, size_t num_b
 
 void BlockConvolver::crossfade_filter(const Filter *filter)
 {
-  assert(filter->block_size == block_size);
-  assert(filter->num_blocks() <= num_blocks);
+  if (filter != NULL)
+  {
+    assert(filter->block_size == block_size);
+    assert(filter->num_blocks() <= num_blocks);
+  }
   
   filter_queue[FILTER_IDX(0)] = filter;
 }
 
 void BlockConvolver::set_filter(const Filter *filter)
 {
-  assert(filter->block_size == block_size);
-  assert(filter->num_blocks() <= num_blocks);
+  if (filter != NULL)
+  {
+    assert(filter->block_size == block_size);
+    assert(filter->num_blocks() <= num_blocks);
+  }
   
   for (size_t i = 0; i < filter_queue.size(); i++)
     filter_queue[i] = filter;
