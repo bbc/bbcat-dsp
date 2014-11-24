@@ -116,7 +116,7 @@ void BlockConvolver::crossfade_filter(const Filter *filter)
     assert(filter->num_blocks() <= num_blocks);
   }
   
-  filters(0) = filter;
+  filters(0) = filter; // set filter through reference
 }
 
 void BlockConvolver::set_filter(const Filter *filter)
