@@ -14,7 +14,8 @@ class BlockConvolver
 {
   public:
     /** Static data required to perform convolution of a particular block size;
-     * may be shared between any number of BlockConvolver instances. */
+     * may be shared between any number of BlockConvolver and
+     * BlockConvolver::Filter instances. */
     class Context
     {
       public:
@@ -42,14 +43,13 @@ class BlockConvolver
 
     /** A filter response which may be shared between many BlockConvolver instances.
      * 
-     * This stores the pre-transformed filter blocks.
-     */
+     * This stores the pre-transformed filter blocks. */
     class Filter
     {
       public:
         /** Create a new Filter given the block size and coefficients.
-         * @param context Context required for transformations; only needed
-         *                during construction; must have the same block size.
+         * @param ctx Context required for transformations; must have a
+         *            lifetime at least as long as the created object.
          * @param filter_length Length of coefficients in samples.
          * @param coefficients Filter coefficients.
          */
@@ -65,9 +65,8 @@ class BlockConvolver
     };
 
     /** Create a BlockConvolver given the block size and number of blocks.
-     * @param context Context required for transformations. This must be alive
-     *                for at least as long as this BlockConvolver, and must
-     *                have the same block size.
+     * @param ctx Context required for transformations. This must be alive
+     *            for at least as long as the created object.
      * @param num_blocks Maximum number of blocks of any filter used.
      */
     BlockConvolver(Context *ctx, size_t num_blocks);
@@ -88,12 +87,14 @@ class BlockConvolver
      *   through the new filter.
      * - Mixing the output of the old and new filters for the next num_blocks blocks.
      * 
-     * @param filter Filter to crossfade to; should be alive for as long as it is active.
+     * @param filter Filter to crossfade to; should be alive for as long as it
+     *               is active. Pass NULL for no filter.
      */
     void crossfade_filter(const Filter *filter);
     
     /** Switch to a different filter at the start of the next block.
-     * @param filter Filter to switch to; should be alive for as long as it is active.
+     * @param filter Filter to switch to; should be alive for as long as it is
+     *               active. Pass NULL for no filter.
      */
     void set_filter(const Filter *filter);
     
