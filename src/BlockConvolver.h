@@ -13,6 +13,11 @@ BBC_AUDIOTOOLBOX_START
 class BlockConvolver
 {
   public:
+    /// Type for real data (float).
+    typedef float real_t;
+    /// Type for complex data (fftwf_complex).
+    typedef fftwf_complex complex_t;
+    
     /** Static data required to perform convolution of a particular block size;
      * may be shared between any number of BlockConvolver and
      * BlockConvolver::Filter instances. */
@@ -53,12 +58,12 @@ class BlockConvolver
          * @param filter_length Length of coefficients in samples.
          * @param coefficients Filter coefficients.
          */
-        Filter(Context *ctx, size_t filter_length, float *coefficients);
+        Filter(Context *ctx, size_t filter_length, real_t *coefficients);
         /** The number of blocks in the filter. */
         size_t num_blocks() const { return blocks.size(); }
 
       private:
-        std::vector<std::unique_ptr<fftwf_complex[], void (*)(void*)> > blocks;
+        std::vector<std::unique_ptr<complex_t[], void (*)(void*)> > blocks;
         const Context *ctx;
         
       friend class BlockConvolver;
@@ -75,7 +80,7 @@ class BlockConvolver
      * @param in Input samples; block_size samples will be read.
      * @param out Output samples; block_size samples will be written.
      */
-    void filter_block(const float *in, float *out);
+    void filter_block(const real_t *in, real_t *out);
     
     /** Crossfade to a new filter during the next block.
      * 
@@ -141,26 +146,26 @@ class BlockConvolver
     // new filter).
     // If the filter is not changed, only spectra_new(i) contains data.
     // num_blocks in length, each of size n+1.
-    Buffer<fftwf_complex> &spectra_old(size_t i);
-    Buffer<fftwf_complex> &spectra_new(size_t i);
+    Buffer<complex_t> &spectra_old(size_t i);
+    Buffer<complex_t> &spectra_new(size_t i);
     // implementation the above circular buffer
-    std::vector<Buffer<fftwf_complex> > spectra_queue_old;
-    std::vector<Buffer<fftwf_complex> > spectra_queue_new;
+    std::vector<Buffer<complex_t> > spectra_queue_old;
+    std::vector<Buffer<complex_t> > spectra_queue_new;
     size_t spectra_ofs;
     
     // Rotate the filter and spectra queues.
     void rotate_queues();
     
     // The second half of the ifft output for the last block, added to the first half before output; size n.
-    Buffer<float> last_tail;
+    Buffer<real_t> last_tail;
     
     // Temporaries used by filter_block to store the padded and faded inputs; size 2n, the second half should always be zeros.
-    Buffer<float> current_td_old;
-    Buffer<float> current_td_new;
+    Buffer<real_t> current_td_old;
+    Buffer<real_t> current_td_new;
     // Temporary used by filter_block to store the multiplied spectrum; size n+1.
-    Buffer<fftwf_complex> multiply_out;
+    Buffer<complex_t> multiply_out;
     // Temporary used to store the time domain output, size 2n.
-    Buffer<float> out_td;
+    Buffer<real_t> out_td;
 };
 
 BBC_AUDIOTOOLBOX_END
