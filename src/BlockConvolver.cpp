@@ -262,11 +262,16 @@ void BlockConvolver::filter_block(float *in, float *out)
     if (filter_queue[FILTER_IDX(1)] != filter_queue[FILTER_IDX(0)]) {
       // if so, produce a version fading down in current_td_old and up in current_td_new, then fft both
       fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), block_size);
+      // clear the second half as this may have been modified by fftw
+      memset(current_td_old.write_ptr() + block_size, 0, block_size * sizeof(float));
+      memset(current_td_new.write_ptr() + block_size, 0, block_size * sizeof(float));
       fftwf_execute_dft_r2c(context->td_to_fd, current_td_old.read_ptr(), spectra_queue_old[SPECTRA_IDX(0)].write_ptr());
       fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_queue_new[SPECTRA_IDX(0)].write_ptr());
     } else {
-      // otherwise just fft directly to new spectra
+      // otherwise just fft directly to new spectra.
       memcpy(current_td_new.write_ptr(), in, block_size * sizeof(float));
+      // clear the second half as this may have been modified by fftw
+      memset(current_td_new.write_ptr() + block_size, 0, block_size * sizeof(float));
       fftwf_execute_dft_r2c(context->td_to_fd, current_td_new.read_ptr(), spectra_queue_new[SPECTRA_IDX(0)].write_ptr());
       spectra_queue_old[SPECTRA_IDX(0)].clear();
     }
