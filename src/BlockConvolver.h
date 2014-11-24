@@ -55,7 +55,7 @@ class BlockConvolver {
         size_t num_blocks() const { return blocks.size(); }
 
       private:
-        std::vector<std::unique_ptr<fftwf_complex, void (*)(void*)> > blocks;
+        std::vector<std::unique_ptr<fftwf_complex[], void (*)(void*)> > blocks;
         const Context *ctx;
         
       friend class BlockConvolver;
@@ -101,7 +101,7 @@ class BlockConvolver {
     class Buffer {
       public:
         explicit Buffer(size_t len);
-        std::unique_ptr<T, void (*)(void*)> data;
+        std::unique_ptr<T[], void (*)(void*)> data;
         const size_t len;
         bool zero;
         

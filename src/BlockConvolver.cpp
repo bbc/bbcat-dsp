@@ -9,19 +9,25 @@
 
 BBC_AUDIOTOOLBOX_START
 
+// Helper to allocate a fftw-compatible block of memory in a unique_ptr
+template <typename T>
+std::unique_ptr<T[], void (*)(void*)> fftw_malloc_unique(size_t len) {
+  std::unique_ptr<T[], void (*)(void*)> data((T*)fftwf_malloc(len * sizeof(T)), &fftwf_free);
+  memset(data.get(), 0, len * sizeof(T));
+  return data;
+}
+
+
 BlockConvolver::Context::Context(size_t block_size)
   :block_size(block_size)
   ,td_size(block_size * 2)
   ,fd_size(block_size + 1)
 {
-  float *td = fftwf_alloc_real(td_size);
-  fftwf_complex *fd = fftwf_alloc_complex(fd_size);
+  auto td = fftw_malloc_unique<float>(td_size);
+  auto fd = fftw_malloc_unique<fftwf_complex>(fd_size);
   
-  td_to_fd = fftwf_plan_dft_r2c_1d(td_size, td, fd, FFTW_DESTROY_INPUT | FFTW_MEASURE);
-  fd_to_td = fftwf_plan_dft_c2r_1d(td_size, fd, td, FFTW_DESTROY_INPUT | FFTW_MEASURE);
-  
-  fftwf_free(td);
-  fftwf_free(fd);
+  td_to_fd = fftwf_plan_dft_r2c_1d(td_size, td.get(), fd.get(), FFTW_DESTROY_INPUT | FFTW_MEASURE);
+  fd_to_td = fftwf_plan_dft_c2r_1d(td_size, fd.get(), td.get(), FFTW_DESTROY_INPUT | FFTW_MEASURE);
 }
 
 BlockConvolver::Context::~Context()
@@ -34,32 +40,28 @@ BlockConvolver::Context::~Context()
 BlockConvolver::Filter::Filter(Context *ctx, size_t filter_length, float *coefficients)
   :ctx(ctx)
 {
-  float *td = fftwf_alloc_real(ctx->td_size);
+  auto td = fftw_malloc_unique<float>(ctx->td_size);
   
   for (size_t offset = 0; offset < filter_length; offset += ctx->block_size)
   {
     size_t this_block_size = offset + ctx->block_size < filter_length ? ctx->block_size : filter_length - offset;
     
     // copy to the first half (or less) of td, and zero the second half
-    memcpy(td, coefficients + offset, this_block_size * sizeof(*coefficients));
-    memset(td + this_block_size, 0, (ctx->td_size - this_block_size) * sizeof(*coefficients));
+    memcpy(td.get(), coefficients + offset, this_block_size * sizeof(*coefficients));
+    memset(td.get() + this_block_size, 0, (ctx->td_size - this_block_size) * sizeof(*coefficients));
     
     // fft into fd
-    fftwf_complex *fd = fftwf_alloc_complex(ctx->fd_size);
-    fftwf_execute_dft_r2c(ctx->td_to_fd, td, fd);
+    auto fd = fftw_malloc_unique<fftwf_complex>(ctx->fd_size);
+    fftwf_execute_dft_r2c(ctx->td_to_fd, td.get(), fd.get());
     
-    blocks.emplace_back(
-        std::unique_ptr<fftwf_complex, void (*)(void*)>(fd, &fftwf_free)
-    );
+    blocks.emplace_back(std::move(fd));
   }
-  
-  free(td);
 }
 
 
 template <typename T>
 BlockConvolver::Buffer<T>::Buffer(size_t len)
-  :data((T*)fftwf_malloc(len * sizeof(T)), &fftwf_free)
+  :data(fftw_malloc_unique<T>(len))
   ,len(len)
   ,zero(true)
 {
@@ -98,8 +100,8 @@ BlockConvolver::BlockConvolver(Context *ctx, size_t num_blocks)
 {
   for (size_t i = 0; i < num_blocks; i++)
   {
-    spectra_queue_old.emplace_back(ctx->fd_size);
-    spectra_queue_new.emplace_back(ctx->fd_size);
+    spectra_queue_old.emplace_back(Buffer<fftwf_complex>(ctx->fd_size));
+    spectra_queue_new.emplace_back(Buffer<fftwf_complex>(ctx->fd_size));
   }
 }
 
