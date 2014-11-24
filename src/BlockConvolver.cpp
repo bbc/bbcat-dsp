@@ -11,7 +11,8 @@ BBC_AUDIOTOOLBOX_START
 
 // Helper to allocate a fftw-compatible block of memory in a unique_ptr
 template <typename T>
-std::unique_ptr<T[], void (*)(void*)> fftw_malloc_unique(size_t len) {
+std::unique_ptr<T[], void (*)(void*)> fftw_malloc_unique(size_t len)
+{
   std::unique_ptr<T[], void (*)(void*)> data((T*)fftwf_malloc(len * sizeof(T)), &fftwf_free);
   memset(data.get(), 0, len * sizeof(T));
   return data;
@@ -69,18 +70,21 @@ BlockConvolver::Buffer<T>::Buffer(size_t len)
 }
 
 template <typename T>
-const T *BlockConvolver::Buffer<T>::read_ptr() {
+const T *BlockConvolver::Buffer<T>::read_ptr()
+{
   return data.get();
 }
 
 template <typename T>
-T *BlockConvolver::Buffer<T>::write_ptr() {
+T *BlockConvolver::Buffer<T>::write_ptr()
+{
   zero = false;
   return data.get();
 }
 
 template <typename T>
-void BlockConvolver::Buffer<T>::clear() {
+void BlockConvolver::Buffer<T>::clear()
+{
   zero = true;
   memset(data.get(), 0, len * sizeof(T));
 }
@@ -125,7 +129,9 @@ void BlockConvolver::set_filter(const Filter *filter)
   }
   
   for (size_t i = 0; i < filter_queue.size(); i++)
+  {
     filter_queue[i] = filter;
+  }
 }
 
 const BlockConvolver::Filter *&BlockConvolver::filters(size_t i)
@@ -157,7 +163,8 @@ void BlockConvolver::rotate_queues()
  *  implements out[i] += a[i] * b[i] for 0 <= i < n */
 void complex_mul_sum_cpp(fftwf_complex *out, const fftwf_complex *a, const fftwf_complex *b, size_t n)
 {
-  for (size_t i = 0; i < n; i++) {
+  for (size_t i = 0; i < n; i++)
+  {
     // implement out[i] += a[i] * b[i]:
     out[i][0] += a[i][0] * b[i][0] - a[i][1] * b[i][1];
     out[i][1] += a[i][0] * b[i][1] + a[i][1] * b[i][0];
@@ -201,7 +208,8 @@ void complex_mul_sum_sse(fftwf_complex *out, const fftwf_complex *a, const fftwf
   // Manually unroll this 3 times; this is the fastest on my machine, and
   // significantly faster than not unrolling.
   size_t offset;
-  for (offset = 0; offset + 6 <= n; offset += 6) {
+  for (offset = 0; offset + 6 <= n; offset += 6)
+  {
     complex_mul_pair_accumulate(out + offset, a + offset, b + offset);
     complex_mul_pair_accumulate(out + offset + 2, a + offset + 2, b + offset + 2);
     complex_mul_pair_accumulate(out + offset + 4, a + offset + 4, b + offset + 4);
@@ -226,8 +234,7 @@ void complex_mul_sum(fftwf_complex *out, const fftwf_complex *a, const fftwf_com
  *   implements a[i] += b[i] for 0 <= i < n */
 void mix_into(float *a, const float *b, size_t n)
 {
-  for (size_t i = 0; i < n; i++)
-    a[i] += b[i];
+  for (size_t i = 0; i < n; i++) a[i] += b[i];
 }
 
 /** Produce two versions of the block of n samples in in, one faded down across
@@ -261,12 +268,12 @@ void output_norm(float *out, const float *in, size_t n)
 
 /** Is a buffer null or contain all zeros? */
 bool all_zeros(const float *in, size_t len) {
-  if (in == NULL)
-    return true;
+  if (in == NULL) return true;
   
   for (size_t i = 0; i < len; i++)
-    if (in[i] != 0.0f)
-      return false;
+  {
+    if (in[i] != 0.0f) return false;
+  }
   
   return true;
 }
@@ -274,13 +281,17 @@ bool all_zeros(const float *in, size_t len) {
 void BlockConvolver::filter_block(const float *in, float *out)
 {
   // Pad and fft in into spectra_queue_old and spectra_queue_new, fading if necessary.
-  if (all_zeros(in, ctx->block_size)) {
+  if (all_zeros(in, ctx->block_size))
+  {
     // zero if input is zero
     spectra_old(0).clear();
     spectra_new(0).clear();
-  } else {
+  }
+  else
+  {
     // has the filter changed?
-    if (filters(1) != filters(0)) {
+    if (filters(1) != filters(0))
+    {
       // if so, produce a version fading down in current_td_old and up in current_td_new, then fft both
       fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), ctx->block_size);
       // clear the second half as this may have been modified by fftw
@@ -288,7 +299,9 @@ void BlockConvolver::filter_block(const float *in, float *out)
       memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(float));
       fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_old.write_ptr(), spectra_old(0).write_ptr());
       fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.write_ptr(), spectra_new(0).write_ptr());
-    } else {
+    }
+    else
+    {
       // otherwise just fft directly to new spectra.
       memcpy(current_td_new.write_ptr(), in, ctx->block_size * sizeof(float));
       // clear the second half as this may have been modified by fftw
@@ -309,22 +322,27 @@ void BlockConvolver::filter_block(const float *in, float *out)
     const Filter *new_filter = filters(i);
     
     if (old_filter != NULL && i < old_filter->blocks.size() && !spectra_old(i).zero)
+    {
       complex_mul_sum(
           multiply_out.write_ptr(),
           old_filter->blocks[i].get(),
           spectra_old(i).read_ptr(),
           ctx->fd_size);
+    }
     if (new_filter != NULL && i < new_filter->blocks.size() && !spectra_new(i).zero)
+    {
       complex_mul_sum(
           multiply_out.write_ptr(),
           new_filter->blocks[i].get(),
           spectra_new(i).read_ptr(),
           ctx->fd_size);
+    }
   }
   
   // Inverse fft, then send the first half plus the last tail to the output,
   // and write the second half to last_tail, to be used in the next block.
-  if (!multiply_out.zero) {
+  if (!multiply_out.zero)
+  {
     fftwf_execute_dft_c2r(ctx->fd_to_td, multiply_out.write_ptr(), out_td.write_ptr());
     
     // Mix last_tail into the first half out_td, and replace last_tail with the second half of out_td.
@@ -333,11 +351,15 @@ void BlockConvolver::filter_block(const float *in, float *out)
     memcpy(last_tail.write_ptr(), out_td.read_ptr() + ctx->block_size, ctx->block_size * sizeof(float));
     
     output_norm(out, out_td.read_ptr(), ctx->block_size);
-  } else if (!last_tail.zero) {
+  }
+  else if (!last_tail.zero)
+  {
     // no spectra, just send the last tail if nonzero
     output_norm(out, last_tail.read_ptr(), ctx->block_size);
     last_tail.clear();
-  } else {
+  }
+  else
+  {
     // no spectra or last tail, zero the output
     memset(out, 0, ctx->block_size * sizeof(float));
   }

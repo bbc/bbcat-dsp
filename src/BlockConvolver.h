@@ -10,11 +10,13 @@ BBC_AUDIOTOOLBOX_START
 
 /** BlockConvolver applies overlap-add partitioned convolution to fixed size
  * blocks of samples. */
-class BlockConvolver {
+class BlockConvolver
+{
   public:
     /** Static data required to perform convolution of a particular block size;
      * may be shared between any number of BlockConvolver instances. */
-    class Context {
+    class Context
+    {
       public:
         /** Create a Context with a given block size.
          * @param block_size Block size in samples.
@@ -42,7 +44,8 @@ class BlockConvolver {
      * 
      * This stores the pre-transformed filter blocks.
      */
-    class Filter {
+    class Filter
+    {
       public:
         /** Create a new Filter given the block size and coefficients.
          * @param context Context required for transformations; only needed
@@ -98,7 +101,8 @@ class BlockConvolver {
     /** Buffer which knows if it contains only zeros.
      */
     template <typename T>
-    class Buffer {
+    class Buffer
+    {
       public:
         explicit Buffer(size_t len);
         std::unique_ptr<T[], void (*)(void*)> data;
