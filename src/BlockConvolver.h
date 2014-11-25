@@ -8,8 +8,9 @@
 
 BBC_AUDIOTOOLBOX_START
 
-/** BlockConvolver applies overlap-add partitioned convolution to fixed size
- * blocks of samples. */
+/** BlockConvolver implements partitioned overlap-add convolution with a fixed
+ *  block size, with efficient fading between filters.
+ */
 class BlockConvolver
 {
   public:
