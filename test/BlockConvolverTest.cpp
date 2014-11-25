@@ -445,3 +445,15 @@ BOOST_AUTO_TEST_CASE( construct_with_filter_no_blocks )
   t.input = generate_random<float>(512 * 3, 300, 0);
   t.run(ctx);
 }
+
+BOOST_AUTO_TEST_CASE( irregular_size )
+{
+  // prime size
+  BlockConvolver::Context ctx(433);
+  ConvolutionTest t(433, 2);
+  t.irs.emplace_back(generate_random<float>(433 * 2, 20, 1), 433 * 2);
+  t.initial_ir = 0;
+  t.ir_for_block = {0, 0};
+  t.input = generate_random<float>(433 * 2, 300, 0);
+  t.run(ctx);
+}
