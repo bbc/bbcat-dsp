@@ -89,8 +89,11 @@ T *BlockConvolver::Buffer<T>::write_ptr()
 template <typename T>
 void BlockConvolver::Buffer<T>::clear()
 {
-  zero = true;
-  memset(data.get(), 0, len * sizeof(T));
+  if (!zero)
+  {
+    zero = true;
+    memset(data.get(), 0, len * sizeof(T));
+  }
 }
 
 
@@ -305,19 +308,20 @@ void BlockConvolver::filter_block(const real_t *in, real_t *out)
     {
       // if so, produce a version fading down in current_td_old and up in current_td_new, then fft both
       fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), ctx->block_size);
-      // clear the second half as this may have been modified by fftw
-      memset(current_td_old.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
-      memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
+      // fft, and clear the second half as this may have been modified by fftw
       fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_old.write_ptr(), spectra_old(0).write_ptr());
+      memset(current_td_old.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
       fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.write_ptr(), spectra_new(0).write_ptr());
+      memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
     }
     else
     {
       // otherwise just fft directly to new spectra.
       memcpy(current_td_new.write_ptr(), in, ctx->block_size * sizeof(real_t));
-      // clear the second half as this may have been modified by fftw
-      memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
+      // fft, and clear the second half as this may have been modified by fftw
       fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.write_ptr(), spectra_new(0).write_ptr());
+      memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
+      // all in spectra_new for this block
       spectra_old(0).clear();
     }
   }
