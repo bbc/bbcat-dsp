@@ -76,6 +76,16 @@ class BlockConvolver
      */
     BlockConvolver(Context *ctx, size_t num_blocks);
     
+    /** Create a BlockConvolver given the block size and number of blocks.
+     *  If fliter == NULL, num_blocks must be specified.
+     * @param ctx Context required for transformations. This must be alive
+     *            for at least as long as the created object.
+     * @param filter Initial filter to be used, or NULL for no filter.
+     * @param num_blocks Maximum number of blocks of any filter used; using 0
+     *                   will take the number of blocks from the passed filter.
+     */
+    BlockConvolver(Context *ctx, const Filter *filter, size_t num_blocks = 0);
+    
     /** Pass a block of audio through the filter.
      * @param in Input samples; block_size samples will be read.
      * @param out Output samples; block_size samples will be written.

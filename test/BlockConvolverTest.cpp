@@ -112,6 +112,12 @@ struct ConvolutionTest {
   size_t max_num_blocks;
   /// pass NULL for blocks contining all zero samples?
   bool null_for_zeros;
+  /// Which constructor to use for BlockConvolver
+  enum {
+    NO_FILTER,                 ///< standard, without a filter
+    WITH_FILTER_NUM_BLOCKS,    ///< specify a filter and a number of blocks
+    WITH_FILTER_NO_NUM_BLOCKS  ///< specify just a filter
+  } constructor;
   
   typedef std::pair<std::unique_ptr<float[], free_type>, size_t> ir_spec;
   /// available inpulse responses; pairs of a float pointer and a length
@@ -135,6 +141,7 @@ struct ConvolutionTest {
     ,initial_ir(-1)
     ,max_num_blocks(0)
     ,null_for_zeros(false)
+    ,constructor(NO_FILTER)
     ,input(fftw_malloc_unique<float>(len))
     ,test_output(fftw_malloc_unique<float>(len))
     ,real_output(fftw_malloc_unique<float>(len))
@@ -179,11 +186,24 @@ struct ConvolutionTest {
       filters.push_back(std::move(filter));
     }
     
-    BlockConvolver convolver(&ctx, max_num_blocks);
+    std::unique_ptr<BlockConvolver> convolver;
+    
+    // Create the filter
+    switch (constructor) {
+      case NO_FILTER:
+        convolver.reset(new BlockConvolver(&ctx, max_num_blocks));
+        break;
+      case WITH_FILTER_NUM_BLOCKS:
+        convolver.reset(new BlockConvolver(&ctx, &filters[initial_ir], max_num_blocks));
+        break;
+      case WITH_FILTER_NO_NUM_BLOCKS:
+        convolver.reset(new BlockConvolver(&ctx, &filters[initial_ir]));
+        break;
+    }
     
     // don't set the starting filter if initial_ir is invalid
     if (initial_ir >= 0)
-      convolver.set_filter(&filters[initial_ir]);
+      convolver->set_filter(&filters[initial_ir]);
     
     // filter each block
     for (size_t block = 0; block < num_blocks; block++) {
@@ -192,16 +212,16 @@ struct ConvolutionTest {
       int last_filter = block == 0 ? initial_ir : ir_for_block[block - 1];
       if (last_filter != this_filter) {
         if (this_filter >= 0)
-          convolver.crossfade_filter(&filters[this_filter]);
+          convolver->crossfade_filter(&filters[this_filter]);
         else
-          convolver.crossfade_filter(NULL);
+          convolver->crossfade_filter(NULL);
       }
       
-      // filter the block to the output; pissibly passing null if zeros are detected
+      // filter the block to the output; possibly passing null if zeros are detected
       if (null_for_zeros && all_zeros(input.get() + block * block_size, block_size)) {
-        convolver.filter_block(NULL, real_output.get() + block * block_size);
+        convolver->filter_block(NULL, real_output.get() + block * block_size);
       } else {
-        convolver.filter_block(input.get() + block * block_size, real_output.get() + block * block_size);
+        convolver->filter_block(input.get() + block * block_size, real_output.get() + block * block_size);
       }
     }
   }
@@ -371,5 +391,29 @@ BOOST_AUTO_TEST_CASE( lots_of_filters )
   t.initial_ir = 0;
   t.ir_for_block = {0, 1, 2, 3, 3, 2, 2, 1, 0};
   t.input = generate_random<float>(512 * 9, 500, 0);
+  t.run(ctx);
+}
+
+BOOST_AUTO_TEST_CASE( construct_with_filter )
+{
+  BlockConvolver::Context ctx(512);
+  ConvolutionTest t(512, 3);
+  t.irs.emplace_back(generate_random<float>(512 * 2, 20, 1), 512 * 2);
+  t.initial_ir = 0;
+  t.ir_for_block = {0, 0, 0};
+  t.constructor = ConvolutionTest::WITH_FILTER_NUM_BLOCKS;
+  t.input = generate_random<float>(512 * 3, 300, 0);
+  t.run(ctx);
+}
+
+BOOST_AUTO_TEST_CASE( construct_with_filter_no_blocks )
+{
+  BlockConvolver::Context ctx(512);
+  ConvolutionTest t(512, 3);
+  t.irs.emplace_back(generate_random<float>(512 * 2, 20, 1), 512 * 2);
+  t.initial_ir = 0;
+  t.ir_for_block = {0, 0, 0};
+  t.constructor = ConvolutionTest::WITH_FILTER_NO_NUM_BLOCKS;
+  t.input = generate_random<float>(512 * 3, 300, 0);
   t.run(ctx);
 }

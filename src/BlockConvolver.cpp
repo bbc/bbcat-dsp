@@ -113,6 +113,13 @@ BlockConvolver::BlockConvolver(Context *ctx, size_t num_blocks)
   }
 }
 
+// num_blocks = 0 by default; if so use num_blocks from filter.
+BlockConvolver::BlockConvolver(Context *ctx, const Filter *filter, size_t num_blocks)
+  :BlockConvolver(ctx, num_blocks > 0 ? num_blocks : filter->num_blocks())
+{
+  set_filter(filter);
+}
+
 void BlockConvolver::crossfade_filter(const Filter *filter)
 {
   if (filter != NULL)
