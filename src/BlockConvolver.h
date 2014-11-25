@@ -77,7 +77,7 @@ class BlockConvolver
     BlockConvolver(Context *ctx, size_t num_blocks);
     
     /** Create a BlockConvolver given the block size and number of blocks.
-     *  If fliter == NULL, num_blocks must be specified.
+     *  If filter == NULL, num_blocks must be specified.
      * @param ctx Context required for transformations. This must be alive
      *            for at least as long as the created object.
      * @param filter Initial filter to be used, or NULL for no filter.

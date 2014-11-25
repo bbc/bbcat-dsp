@@ -110,7 +110,7 @@ struct ConvolutionTest {
   /// the number of blocks to create the BlockConvolver with; will be set to
   /// the maximum filter length used if it's too low.
   size_t max_num_blocks;
-  /// pass NULL for blocks contining all zero samples?
+  /// pass NULL for blocks containing all zero samples?
   bool null_for_zeros;
   /// Which constructor to use for BlockConvolver
   enum {
