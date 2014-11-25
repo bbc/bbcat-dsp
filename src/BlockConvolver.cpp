@@ -257,7 +257,7 @@ void mix_into(real_t *a, const real_t *b, size_t n)
 void fade_down_and_up(const real_t *in, real_t *down, real_t *up, size_t n)
 {
   // pull divide out of the loop
-  real_t i_scale = 1.0 / (n-1);
+  real_t i_scale = 1.0 / n;
   
   for (size_t i = 0; i < n; i++)
   {

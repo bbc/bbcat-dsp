@@ -61,7 +61,7 @@ void convolve(size_t len, float *out, float *in, size_t ir_len, float *ir)
 /// Fade up linearly over a block.
 void fade_up(float *out, float *in, size_t n)
 {
-  float i_scale = 1.0 / (n-1);
+  float i_scale = 1.0 / n;
   
   for (size_t i = 0; i < n; i++)
   {
@@ -73,7 +73,7 @@ void fade_up(float *out, float *in, size_t n)
 /// Fade down linearly over a block.
 void fade_down(float *out, float *in, size_t n)
 {
-  float i_scale = 1.0 / (n-1);
+  float i_scale = 1.0 / n;
   
   for (size_t i = 0; i < n; i++)
   {
