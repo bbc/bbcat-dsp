@@ -955,8 +955,6 @@ float ConvolverManager::CalculateLevel(const float *data, uint_t n)
 /*--------------------------------------------------------------------------------*/
 void ConvolverManager::SetAudioScale(float maxlevel)
 {
-  UNUSED_PARAMETER(maxlevel);
-
   if (maxlevel > 0.f)
   {
     audioscale = 1.f / maxlevel;
