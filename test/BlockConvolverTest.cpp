@@ -134,6 +134,8 @@ class ConvolutionTest
       WITH_FILTER_NO_NUM_BLOCKS  ///< specify just a filter
     } constructor;
     
+    float max_error;
+    
     typedef std::pair<std::unique_ptr<float[], free_type>, size_t> ir_spec;
     /// available inpulse responses; pairs of a float pointer and a length
     std::vector<ir_spec> irs;
@@ -157,6 +159,7 @@ class ConvolutionTest
       ,max_num_blocks(0)
       ,null_for_zeros(false)
       ,constructor(NO_FILTER)
+      ,max_error(1e-6f)
       ,input(fftw_malloc_unique<float>(len))
       ,test_output(fftw_malloc_unique<float>(len))
       ,real_output(fftw_malloc_unique<float>(len))
@@ -265,7 +268,7 @@ class ConvolutionTest
       
       for (size_t i = 0; i < len; i++)
       {
-        BOOST_CHECK_SMALL(test_output.get()[i] - real_output.get()[i], 1e-6f);
+        BOOST_CHECK_SMALL(test_output.get()[i] - real_output.get()[i], max_error);
       }
     }
 };
@@ -455,5 +458,6 @@ BOOST_AUTO_TEST_CASE( irregular_size )
   t.initial_ir = 0;
   t.ir_for_block = {0, 0};
   t.input = generate_random<float>(433 * 2, 300, 0);
+  t.max_error = 2e-6f;
   t.run(ctx);
 }
