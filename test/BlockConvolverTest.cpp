@@ -110,6 +110,18 @@ void write_array(const std::string &base, const std::string &name, size_t n, flo
   }
 }
 
+/// A test of the block convolver.
+///
+/// This class represents the inputs to a BlockConvolver across several blocks,
+/// including the filters to switch between and the input data.
+///
+/// Once the inputs have been set up (see public attributes), calling run will
+/// apply both a real convolver and a simulated convolver to these inputs, and
+/// compare the results to check that they are equivalent.
+///
+/// The important bits are irs, the definitions of the impulse responses; and
+/// ir_for_block, which specifies which impulse response to switch to before each
+/// block.
 class ConvolutionTest
 {
   public:
@@ -134,6 +146,7 @@ class ConvolutionTest
       WITH_FILTER_NO_NUM_BLOCKS  ///< specify just a filter
     } constructor;
     
+    /// Maximum acceptable error between the two versions.
     float max_error;
     
     typedef std::pair<std::unique_ptr<float[], free_type>, size_t> ir_spec;
@@ -166,6 +179,7 @@ class ConvolutionTest
     {
     }
     
+    /// Run a simulated convolution on the specified inputs.
     void run_test_convolve(const std::string &out_dir="")
     {
       // For each filter, create modified input data with fades applied, then convolve and add to the output.
@@ -196,6 +210,7 @@ class ConvolutionTest
       }
     }
     
+    /// Run the real convolution.
     void run_real_convolve(BlockConvolver::Context &ctx)
     {
       // Create filters from irs, while finding the required number of blocks.
@@ -254,9 +269,9 @@ class ConvolutionTest
       }
     }
     
-    /** Run the test, possibly writing the input and output datas to files.
-     *  @param out_dir Output dir for data files; should end with a trailing slash.
-     */
+    /// Run the simulated and real convolutions, possibly writing the input and
+    /// output datas to files.
+    /// @param out_dir Output dir for data files; should end with a trailing slash.
     void run(BlockConvolver::Context &ctx, const std::string &out_dir="")
     {
       run_test_convolve(out_dir);
