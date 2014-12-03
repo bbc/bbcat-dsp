@@ -1,7 +1,6 @@
 #ifndef __BLOCK_CONVOLVER__
 #define __BLOCK_CONVOLVER__
 
-#include <fftw3.h>
 #include <vector>
 #include <memory>
 #include <bbcat-base/misc.h>
@@ -16,8 +15,8 @@ class BlockConvolver
   public:
     /// Type for real data (float).
     typedef float real_t;
-    /// Type for complex data (fftwf_complex).
-    typedef fftwf_complex complex_t;
+    /// Type for complex data.
+    typedef float complex_t[2];
     
     /** Static data required to perform convolution of a particular block size;
      * may be shared between any number of BlockConvolver and
@@ -39,9 +38,12 @@ class BlockConvolver
         // frequency domain size; block_size + 1
         const size_t fd_size;
         
+        // forward declaration; defined in the cpp file.
+        struct fft_data;
+        
         // fft plans between time and frequency domain blocks.
-        fftwf_plan td_to_fd;
-        fftwf_plan fd_to_td;
+        std::unique_ptr<fft_data> td_to_fd;
+        std::unique_ptr<fft_data> fd_to_td;
       
       friend class BlockConvolver;
       friend class Filter;

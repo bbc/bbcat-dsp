@@ -4,6 +4,7 @@
 
 #include <map>
 #include <fstream>
+#include <fftw3.h>
 
 #include <bbcat-base/misc.h>
 #include "../src/BlockConvolver.h"

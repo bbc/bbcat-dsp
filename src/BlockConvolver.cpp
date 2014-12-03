@@ -2,12 +2,19 @@
 #include <assert.h>
 #include <string.h>
 
+#include <fftw3.h>
+
 #ifdef __SSE3__
 #  include <xmmintrin.h>
 #  include <pmmintrin.h>
 #endif
 
 BBC_AUDIOTOOLBOX_START
+
+struct BlockConvolver::Context::fft_data
+{
+  fftwf_plan plan;
+};
 
 // aliases so we don't have to keep using BlockConvolver:: in function headers
 typedef BlockConvolver::real_t real_t;
@@ -27,18 +34,20 @@ BlockConvolver::Context::Context(size_t block_size)
   :block_size(block_size)
   ,td_size(block_size * 2)
   ,fd_size(block_size + 1)
+  ,td_to_fd(new fft_data)
+  ,fd_to_td(new fft_data)
 {
   auto td = fftw_malloc_unique<real_t>(td_size);
   auto fd = fftw_malloc_unique<complex_t>(fd_size);
   
-  td_to_fd = fftwf_plan_dft_r2c_1d(td_size, td.get(), fd.get(), FFTW_DESTROY_INPUT | FFTW_MEASURE);
-  fd_to_td = fftwf_plan_dft_c2r_1d(td_size, fd.get(), td.get(), FFTW_DESTROY_INPUT | FFTW_MEASURE);
+  td_to_fd->plan = fftwf_plan_dft_r2c_1d(td_size, td.get(), fd.get(), FFTW_DESTROY_INPUT | FFTW_MEASURE);
+  fd_to_td->plan = fftwf_plan_dft_c2r_1d(td_size, fd.get(), td.get(), FFTW_DESTROY_INPUT | FFTW_MEASURE);
 }
 
 BlockConvolver::Context::~Context()
 {
-  fftwf_destroy_plan(td_to_fd);
-  fftwf_destroy_plan(fd_to_td);
+  fftwf_destroy_plan(td_to_fd->plan);
+  fftwf_destroy_plan(fd_to_td->plan);
 }
 
 
@@ -57,7 +66,7 @@ BlockConvolver::Filter::Filter(Context *ctx, size_t filter_length, real_t *coeff
     
     // fft into fd
     auto fd = fftw_malloc_unique<complex_t>(ctx->fd_size);
-    fftwf_execute_dft_r2c(ctx->td_to_fd, td.get(), fd.get());
+    fftwf_execute_dft_r2c(ctx->td_to_fd->plan, td.get(), fd.get());
     
     blocks.emplace_back(std::move(fd));
   }
@@ -309,9 +318,9 @@ void BlockConvolver::filter_block(const real_t *in, real_t *out)
       // if so, produce a version fading down in current_td_old and up in current_td_new, then fft both
       fade_down_and_up(in, current_td_old.write_ptr(), current_td_new.write_ptr(), ctx->block_size);
       // fft, and clear the second half as this may have been modified by fftw
-      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_old.write_ptr(), spectra_old(0).write_ptr());
+      fftwf_execute_dft_r2c(ctx->td_to_fd->plan, current_td_old.write_ptr(), spectra_old(0).write_ptr());
       memset(current_td_old.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
-      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.write_ptr(), spectra_new(0).write_ptr());
+      fftwf_execute_dft_r2c(ctx->td_to_fd->plan, current_td_new.write_ptr(), spectra_new(0).write_ptr());
       memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
     }
     else
@@ -319,7 +328,7 @@ void BlockConvolver::filter_block(const real_t *in, real_t *out)
       // otherwise just fft directly to new spectra.
       memcpy(current_td_new.write_ptr(), in, ctx->block_size * sizeof(real_t));
       // fft, and clear the second half as this may have been modified by fftw
-      fftwf_execute_dft_r2c(ctx->td_to_fd, current_td_new.write_ptr(), spectra_new(0).write_ptr());
+      fftwf_execute_dft_r2c(ctx->td_to_fd->plan, current_td_new.write_ptr(), spectra_new(0).write_ptr());
       memset(current_td_new.write_ptr() + ctx->block_size, 0, ctx->block_size * sizeof(real_t));
       // all in spectra_new for this block
       spectra_old(0).clear();
@@ -358,7 +367,7 @@ void BlockConvolver::filter_block(const real_t *in, real_t *out)
   // and write the second half to last_tail, to be used in the next block.
   if (!multiply_out.zero)
   {
-    fftwf_execute_dft_c2r(ctx->fd_to_td, multiply_out.write_ptr(), out_td.write_ptr());
+    fftwf_execute_dft_c2r(ctx->fd_to_td->plan, multiply_out.write_ptr(), out_td.write_ptr());
     
     // Mix last_tail into the first half out_td, and replace last_tail with the second half of out_td.
     if (!last_tail.zero)
