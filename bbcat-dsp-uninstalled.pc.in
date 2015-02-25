@@ -1,0 +1,10 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/bbcat-dsp/
+includedir=${pcfiledir}/
+
+Name: bbcat-dsp-@BBCAT_DSP_MAJORMINOR@ uninstalled
+Description: General purpose audio DSP library
+Version: @VERSION@
+Libs: -L${libdir} -lbbcat-dsp-@BBCAT_DSP_MAJORMINOR@
+Cflags: -I${includedir} -I@srcdir@

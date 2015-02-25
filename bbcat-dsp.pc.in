@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/bbcat-dsp-@BBCAT_DSP_MAJORMINOR@
+toolsdir=${exec_prefix}/bin
+
+
+Name: bbcat-dsp-@BBCAT_DSP_MAJORMINOR@
+Description: Diginal signal processing library
+Requires.private: @BBCAT_DSP_PKG_DEPS@
+Version: @VERSION@
+Libs: -L${libdir} -lbbcat-dsp-@BBCAT_DSP_MAJORMINOR@
+Cflags: -I${includedir} @BBCAT_GLOBAL_DSP_CFLAGS@

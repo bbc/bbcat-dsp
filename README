@@ -1,0 +1,45 @@
+Purpose
+
+bbcat-dsp is a general purpose DSP library which forms the basis of the Audio Toolbox software and is also integrated into IP Studio
+
+Dependencies
+
+bbcat-base - https://github.com/bbcrd/bbcat-base.git
+
+Files
+
+autogen.sh - simple autotools script
+configure.ac - configure configuration for autotools
+COPYING - information on copying this library
+debian/ - Debian control and version information
+doxygen.am - Doxygen automake file
+doxygen.cfg - Doxygen configuration
+m4 - folder for autotools
+Makefile.am - makefile for automake
+README - this file
+src/ - source folder containing C/C++ source and header files
+
+src/FractionalSample.cpp                | Fractional delay line for floating point samples
+src/FractionalSample.h
+
+src/genconversions.php                  | PHP script to GENERATE SoundFormatRawConverisons.cpp
+
+src/Interpolator.h                      | Simple interpolation class
+
+src/Makefile.am                         | Makefile for automake
+
+src/SoundDelayBuffer.cpp                | Delay/ring audio buffer 
+src/SoundDelayBuffer.h                  |
+
+src/SoundFormatConversions.cpp          | Sound sample format conversion/transfer routines
+src/SoundFormatConversions.h            |
+
+src/SoundFormatRawConversions.cpp       | AUTO-GENERATED (by genconversions.php) implementation of efficient sound format conversions
+src/SoundFormatRawConversions.h         | (.h file not auto-generated)
+
+src/SoundMixing.cpp                     | Sound summing functions
+src/SoundMixing.h                       |
+
+Building (dynamic libraries)
+
+./autogen.sh && configure && make && sudo make install
