@@ -1,0 +1,30 @@
+Purpose
+
+Library containing various control and hardware interfacing facilities
+
+Dependencies
+
+bbcat-base - https://github.com/bbcrd/bbcat-base.git
+bbcat-dsp - https://github.com/bbcrd/bbcat-dsp.git
+
+Files
+
+autogen.sh - simple autotools script
+configure.ac - configure configuration for autotools
+COPYING - information on copying this library
+debian/ - Debian control and version information
+doxygen.am - Doxygen automake file
+doxygen.cfg - Doxygen configuration
+m4 - folder for autotools
+Makefile.am - makefile for automake
+README - this file
+src/ - source folder containing C/C++ source and header files
+
+src/AudioObjectCursor.h                 | A cursor that tracks channel parameter changes over time 
+
+src/AudioObjectParameters.cpp           | A set of parameters describing a channel's audio attributes (such as position, size, diffuseness, gain and importance)
+src/AudioObjectParameters.h             |
+
+Building (dynamic libraries)
+
+./autogen.sh && configure && make && sudo make install

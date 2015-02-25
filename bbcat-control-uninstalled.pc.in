@@ -1,0 +1,10 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/bbcat-control/
+includedir=${pcfiledir}/
+
+Name: bbcat-control-@BBCAT_CONTROL_MAJORMINOR@ uninstalled
+Description: Library containing various control and hardware interfacing facilities
+Version: @VERSION@
+Libs: -L${libdir} -lbbcat-control-@BBCAT_CONTROL_MAJORMINOR@
+Cflags: -I${includedir} -I@srcdir@

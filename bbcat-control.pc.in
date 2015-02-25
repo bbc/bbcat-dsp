@@ -1,0 +1,15 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/bbcat-control-@BBCAT_CONTROL_MAJORMINOR@
+toolsdir=${exec_prefix}/bin
+
+
+Name: bbcat-control-@BBCAT_CONTROL_MAJORMINOR@
+Description: Library containing various control and hardware interfacing facilities
+Requires.private: @BBCAT_CONTROL_PKG_DEPS@
+Version: @VERSION@
+Libs: -L${libdir} -lbbcat-control-@BBCAT_CONTROL_MAJORMINOR@ @BBCAT_GLOBAL_CONTROL_LIBS@
+Cflags: -I${includedir} @BBCAT_GLOBAL_CONTROL_CFLAGS@
+
+

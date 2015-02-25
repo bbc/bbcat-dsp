@@ -1,0 +1,20 @@
+Source: bbcat-control
+Priority: optional
+Maintainer: Richard Day <richard.day@bbc.co.uk>
+Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 9), pkg-config, liboscpack-dev (>= 1.0.2), libbbcat-base-dev (>= 0.1.1.0), libbbcat-dsp-dev (>= 0.1.1.0)
+
+Package: libbbcat-control
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Control and hardware interfacing facilities, shared library
+
+Package: libbbcat-control-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: libbbcat-control (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Description: Control and hardware interfacing facilities, development library
