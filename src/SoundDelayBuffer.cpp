@@ -10,8 +10,9 @@
 BBC_AUDIOTOOLBOX_START
 
 SoundDelayBuffer::SoundDelayBuffer() : buf(NULL),
-                                       format(SampleFormat_Double),
+                                       format(SampleFormat_Float),
                                        channels(0),
+                                       bytesperframe(0),
                                        buflen(0),
                                        writepos(0)
 {
@@ -49,11 +50,12 @@ void SoundDelayBuffer::SetSize(uint_t chans, uint_t length, SampleFormat_t type)
         delete[] buf;
       }
 
-      buf       = newbuf;
-      channels  = chans;
-      buflen    = length;
-      format    = type;
-      writepos %= buflen;
+      buf           = newbuf;
+      channels      = chans;
+      buflen        = length;
+      format        = type;
+      writepos     %= buflen;
+      bytesperframe = channels * bps;
     }
   }
 }
@@ -79,8 +81,14 @@ uint_t SoundDelayBuffer::WriteSamples(const uint8_t *src, SampleFormat_t srcform
   if (buf)
   {
     uint_t srclen = GetBytesPerSample(srcformat);
-    uint_t dstlen = GetBytesPerSample(format);
     uint_t pos    = writepos;
+
+#if DEBUG_LEVEL >= 2
+    if (srcformat != format)
+    {
+      DEBUG("Warning: WriteSamples performing sample conversion (%u -> %u)", srcformat, format);
+    }
+#endif
 
     // limit requested channels to those held in the buffer
     channel   = MIN(channel,   channels - 1);
@@ -88,8 +96,8 @@ uint_t SoundDelayBuffer::WriteSamples(const uint8_t *src, SampleFormat_t srcform
 
     while (nframes)
     {
-      uint8_t *dst = buf + pos * channels * dstlen;   // destination for copy
-      uint_t n = MIN(nframes, buflen - pos);          // maximum number of frames that can be stored this time
+      uint8_t *dst = buf + pos * bytesperframe;         // destination for copy
+      uint_t  n    = MIN(nframes, buflen - pos);        // maximum number of frames that can be stored this time
 
       TransferSamples(src, srcformat, MACHINE_IS_BIG_ENDIAN, 0,       nchannels,      // note differing number of channels for source
                       dst, format,    MACHINE_IS_BIG_ENDIAN, channel, channels,       // and destination -> this essentially interleaves the data
@@ -129,7 +137,6 @@ uint_t SoundDelayBuffer::ReadSamples(uint8_t *dst, SampleFormat_t dstformat, uin
 
   if (buf)
   {
-    uint_t srclen = GetBytesPerSample(format);
     uint_t dstlen = GetBytesPerSample(dstformat);
     uint_t pos    = (writepos + buflen - delay) % buflen;
 
@@ -143,8 +150,8 @@ uint_t SoundDelayBuffer::ReadSamples(uint8_t *dst, SampleFormat_t dstformat, uin
 
     while (nframes)
     {
-      const uint8_t *src = buf + pos * channels * srclen; // source for copy
-      uint_t n = MIN(nframes, buflen - pos);                  // maximum number of frames that can be stored this time
+      const uint8_t *src = buf + pos * bytesperframe;           // source for copy
+      uint_t n = MIN(nframes, buflen - pos);                    // maximum number of frames that can be stored this time
 
       TransferSamples(src, format,    MACHINE_IS_BIG_ENDIAN, channel, channels,       // note differing number of channels for source
                       dst, dstformat, MACHINE_IS_BIG_ENDIAN, 0,       nchannels,      // and destination -> this essentially de-interleaves the data
@@ -162,16 +169,24 @@ uint_t SoundDelayBuffer::ReadSamples(uint8_t *dst, SampleFormat_t dstformat, uin
   return frames;
 }
 
+/*--------------------------------------------------------------------------------*/
+/** Simple single sample reading
+ */
+/*--------------------------------------------------------------------------------*/
 Sample_t SoundDelayBuffer::ReadSample(uint_t channel, uint_t delay) const
 {
-  uint_t   srclen = GetBytesPerSample(format);
-  Sample_t res;
+  Sample_t res = 0.0;
 
-  TransferSamples(buf + ((writepos + buflen - delay) % buflen) * channels * srclen,
-                  format, MACHINE_IS_BIG_ENDIAN,
-                  channel, channels,
-                  &res, SampleFormatOf(res), MACHINE_IS_BIG_ENDIAN,
-                  0, 1);
+#if DEBUG_LEVEL >= 2
+  if (SampleFormatOf(res) != format)
+  {
+    DEBUG("Warning: ReadSample performing sample conversion (%u -> %u)", format, SampleFormatOf(res));
+  }
+#endif
+
+  TransferSamplesLinear(buf + ((writepos + buflen - delay) % buflen) * bytesperframe + channel, format,
+                        &res, SampleFormatOf(res));
+
   return res;
 }
 

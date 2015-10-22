@@ -24,9 +24,14 @@ src/FractionalSample.h
 
 src/genconversions.php                  | PHP script to GENERATE SoundFormatRawConverisons.cpp
 
+src/Histogram.h							| Histogram template class
+
 src/Interpolator.h                      | Simple interpolation class
 
 src/Makefile.am                         | Makefile for automake
+
+src/RingBuffer.h						| Simple ring buffer template class
+src/RunningAverage.h					| Simple running average template class
 
 src/SoundDelayBuffer.cpp                | Delay/ring audio buffer 
 src/SoundDelayBuffer.h                  |
