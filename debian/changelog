@@ -1,8 +1,16 @@
-bbcat-dsp (0.1.1.0) quantal; urgency=low
+bbcat-dsp (0.1.2.0) quantal; urgency=low
 
-  * Option for alternative FFT libraries, remove use of APF.
+  * Added Windows build support using CMake
+  * Added CMake build support for Mac and Linux
+  * Added Histogram template class for managing data histograms
+  * Added RingBuffer template class for handling simple ring buffers
+  * Added RunningAverage template class for calculating running averages
+  * Added better sample format support in SoundDelayBuffer
+  * Added simple TransferSamplesLinear() in SoundFormatConversions.h for efficient handling of contiguous sample data
+  * Added version number embedding using versions.cpp/h
+  * Updated README file
 
- -- Richard Day <richard.day@bbc.co.uk>  Fri, 13 Feb 2015 08:10:00 +0000
+ -- Richard Day <richard.day@bbc.co.uk>  Mon, 26 Oct 2015 10:30:00 +0000
 
 bbcat-dsp (0.1.0.0) quantal; urgency=low
 

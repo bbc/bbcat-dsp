@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([BBCAT_DSP],[0.1.1.1])
+AC_INIT([BBCAT_DSP],[0.1.2.0])
 
 AS_NANO(BBCAT_DSP_CVS=no,BBCAT_DSP_CVS=yes)
 
@@ -37,7 +37,7 @@ DX_DOXYGEN_FEATURE(ON)
 DX_INIT_DOXYGEN(bbcat-dsp, doxygen.cfg)
 
 dnl bbcat-base is required
-BBCAT_BASE_VER="0.1.1.1"
+BBCAT_BASE_VER="0.1.2.0"
 PKG_CHECK_MODULES(BBCAT_BASE, bbcat-base-0.1 >= $BBCAT_BASE_VER, HAVE_BBCAT_BASE=yes, HAVE_BBCAT_BASE=no)
 if test "x${HAVE_BBCAT_BASE}" != xyes ; then
   AC_MSG_ERROR([bbcat-base-0.1 >= $BBCAT_BASE_VER is required])
