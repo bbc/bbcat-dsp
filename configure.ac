@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([BBCAT_DSP],[0.1.1.0])
+AC_INIT([BBCAT_DSP],[0.1.2.0])
 
 AS_NANO(BBCAT_DSP_CVS=no,BBCAT_DSP_CVS=yes)
 
@@ -37,28 +37,10 @@ DX_DOXYGEN_FEATURE(ON)
 DX_INIT_DOXYGEN(bbcat-dsp, doxygen.cfg)
 
 dnl bbcat-base is required
-BBCAT_BASE_VER="0.1.1.0"
+BBCAT_BASE_VER="0.1.2.0"
 PKG_CHECK_MODULES(BBCAT_BASE, bbcat-base-0.1 >= $BBCAT_BASE_VER, HAVE_BBCAT_BASE=yes, HAVE_BBCAT_BASE=no)
 if test "x${HAVE_BBCAT_BASE}" != xyes ; then
   AC_MSG_ERROR([bbcat-base-0.1 >= $BBCAT_BASE_VER is required])
-fi
-
-# check for convolving support
-AC_MSG_CHECKING(whether to include support for convolving)
-AC_ARG_ENABLE(convolver, AS_HELP_STRING([--disable-convolver], [disable convolver support]), ENABLE_CONVOLVER="no", ENABLE_CONVOLVER="yes")
-if test "x${ENABLE_CONVOLVER}" = "xyes"; then
-  AC_MSG_RESULT(yes)
-
-  # check for SOFA support
-  AC_MSG_CHECKING(whether to include SOFA support)
-  AC_ARG_ENABLE(sofa, AS_HELP_STRING([--disable-sofa], [disable SOFA support]), ENABLE_SOFA="no", ENABLE_SOFA="yes")
-  if test "x${ENABLE_SOFA}" = "xyes"; then
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-  fi
-else
-  AC_MSG_RESULT(no)
 fi
 
 # Check for GPL support
@@ -137,14 +119,6 @@ fi
 
 BBCAT_GLOBAL_DSP_CFLAGS=""
 AC_SUBST(BBCAT_GLOBAL_DSP_CFLAGS)
-
-LIBBOOST_VER="1.49.0"
-AX_BOOST_BASE($LIBBOOST_VER, HAVE_BOOST=yes, HAVE_BOOST=no)
-if test "x${HAVE_BOOST}" = "xyes" ; then
-    AX_BOOST_UNIT_TEST_FRAMEWORK
-else
-    AC_MSG_ERROR([boost >= $LIBBOOST_VER is required])
-fi
 
 AC_APPEND_SUPPORTED_CFLAGS(BBCAT_DSP_CFLAGS, [-Wall])
 #AC_APPEND_SUPPORTED_CFLAGS(BBCAT_DSP_CFLAGS, [-Werror])

@@ -160,6 +160,33 @@ void TransferSamples(const void *vsrc,       SampleFormat_t srctype, bool src_be
   }
 }
 
+/*--------------------------------------------------------------------------------*/
+/** Simple linear, contiguous transfer, (internal endianness -> internal endianness)
+ */
+/*--------------------------------------------------------------------------------*/
+void TransferSamplesLinear(const void *vsrc, SampleFormat_t srctype,
+                           void       *vdst, SampleFormat_t dsttype,
+                           uint_t     nsamples,
+                           Ditherer   *ditherer)
+{
+  // look up correct function for conversion/copy
+  CONVERTSAMPLES fn = SoundFormatConversions[(uint_t)MACHINE_IS_BIG_ENDIAN][(uint_t)MACHINE_IS_BIG_ENDIAN][srctype][dsttype];
+  if (!fn)
+  {
+    ERROR("Unknown copying routine for (%u/%u)", srctype, dsttype);
+    return;
+  }
+
+  // finally, run the function
+  (*fn)((const uint8_t *)vsrc, (uint8_t *)vdst, nsamples, 1, 0, 0, ditherer);
+}
+
+/*--------------------------------------------------------------------------------*/
+/** Memory to memory conversions/transfers
+ *
+ * ASSUMES endianness of data is the same as the machine
+ */
+/*--------------------------------------------------------------------------------*/
 void TransferSamples(const sint16_t *src, uint_t src_channel, uint_t src_channels, sint16_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels, uint_t nframes, Ditherer *ditherer)
 {
   TransferSamples(src, SampleFormat_16bit, MACHINE_IS_BIG_ENDIAN, src_channel, src_channels, dst, SampleFormat_16bit, MACHINE_IS_BIG_ENDIAN, dst_channel, dst_channels, nchannels, nframes, ditherer);

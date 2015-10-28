@@ -20,7 +20,15 @@ public:
    *
    */
   /*--------------------------------------------------------------------------------*/
-  virtual void SetSize(uint_t chans, uint_t length, SampleFormat_t type = SampleFormat_Double);
+  virtual void SetSize(uint_t chans, uint_t length, SampleFormat_t type = SampleFormat_Float);
+  virtual void SetSize(uint_t chans, uint_t length, sint16_t       examplevalue)  {SetSize(chans, length, SampleFormatOf(examplevalue));}
+  virtual void SetSize(uint_t chans, uint_t length, sint32_t       examplevalue)  {SetSize(chans, length, SampleFormatOf(examplevalue));}
+  virtual void SetSize(uint_t chans, uint_t length, Sample_t       examplevalue)  {SetSize(chans, length, SampleFormatOf(examplevalue));}
+  virtual void SetSize(uint_t chans, uint_t length, double         examplevalue)  {SetSize(chans, length, SampleFormatOf(examplevalue));}
+  virtual void SetSize(uint_t chans, uint_t length, const sint16_t *examplevalue) {SetSize(chans, length, SampleFormatOf(examplevalue));}
+  virtual void SetSize(uint_t chans, uint_t length, const sint32_t *examplevalue) {SetSize(chans, length, SampleFormatOf(examplevalue));}
+  virtual void SetSize(uint_t chans, uint_t length, const Sample_t *examplevalue) {SetSize(chans, length, SampleFormatOf(examplevalue));}
+  virtual void SetSize(uint_t chans, uint_t length, const double   *examplevalue) {SetSize(chans, length, SampleFormatOf(examplevalue));}
 
   uint_t         GetChannels()      const {return channels;}
   uint_t         GetLength()        const {return buflen;}
@@ -90,6 +98,7 @@ protected:
   uint8_t        *buf;
   SampleFormat_t format;
   uint_t         channels;
+  uint_t         bytesperframe;
   uint_t         buflen, writepos;
 };
 

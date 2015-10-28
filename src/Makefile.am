@@ -24,11 +24,15 @@ libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES =	\
 	SoundDelayBuffer.cpp							\
 	SoundFormatConversions.cpp						\
 	SoundFormatRawConversions.cpp					\
-	SoundMixing.cpp
+	SoundMixing.cpp									\
+	version.cpp
 
 pkginclude_HEADERS =							\
 	FractionalSample.h							\
+	Histogram.h									\
 	Interpolator.h								\
+	RingBuffer.h								\
+	RunningAverage.h							\
 	SoundDelayBuffer.h							\
 	SoundFormatConversions.h					\
 	SoundFormatRawConversions.h					\
@@ -41,7 +45,14 @@ nodist_pkginclude_HEADERS =
 
 distcleanfiles = 
 
-CLEANFILES = version.h
+CLEANFILES = version.h version.cpp
 
-version.h: Makefile ../config.h
-	echo "{\"@PACKAGE@\", \"@VERSION@\"}," >version.h
+version.h: Makefile ../config.h ../gitbranch.txt
+	echo "{\"@PACKAGE@\", \"@VERSION@-`cat ../gitbranch.txt`\"}," >version.h
+
+version.cpp: Makefile ../config.h ../gitbranch.txt
+	echo "/* Auto-generated: DO NOT EDIT! */" >version.cpp
+	echo "#include <bbcat-base/LoadedVersions.h>" >>version.cpp
+	echo "BBC_AUDIOTOOLBOX_START" >>version.cpp
+	echo "volatile uint_t __keep_@PACKAGE@_version = bbcat::LoadedVersions::Get().Register(\"@PACKAGE@\", \"@VERSION@-`cat ../gitbranch.txt`\");" >>version.cpp
+	echo "BBC_AUDIOTOOLBOX_END" >>version.cpp

@@ -24,9 +24,14 @@ src/FractionalSample.h
 
 src/genconversions.php                  | PHP script to GENERATE SoundFormatRawConverisons.cpp
 
+src/Histogram.h							| Histogram template class
+
 src/Interpolator.h                      | Simple interpolation class
 
 src/Makefile.am                         | Makefile for automake
+
+src/RingBuffer.h						| Simple ring buffer template class
+src/RunningAverage.h					| Simple running average template class
 
 src/SoundDelayBuffer.cpp                | Delay/ring audio buffer 
 src/SoundDelayBuffer.h                  |
@@ -40,6 +45,29 @@ src/SoundFormatRawConversions.h         | (.h file not auto-generated)
 src/SoundMixing.cpp                     | Sound summing functions
 src/SoundMixing.h                       |
 
-Building (dynamic libraries)
+--------------------------------------------------------------------------------
+Building on Windows (Visual Studio)
 
+mkdir build
+cd build
+cmake -G "Visual Studio 14 2015 Win64" .. && cmake --build . --target INSTALL --config Release
+(or whatever version of Visual Studio you are using)
+
+Notes on Windows builds
+
+As there is no standardised directories for cmake files, libraries, etc. the build *assumes* that:
+1. Library includes, libs and shared files will be stored in c:\local\bbcat
+2. CMake configuration files will be stored in c:\local\cmake
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Building on Mac and Linux
+
+There are two build mechanisms supported: autotools and cmake
+
+autotools:
 ./autogen.sh && configure && make && sudo make install
+
+cmake:
+mkdir build ; cd build ; cmake .. && make && sudo make install
+--------------------------------------------------------------------------------

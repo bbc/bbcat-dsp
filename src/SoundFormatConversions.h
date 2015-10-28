@@ -142,13 +142,22 @@ extern uint8_t GetBytesPerSample(SampleFormat_t type);
  *   0 <  nchannels   <= dst_channels
  */
 /*--------------------------------------------------------------------------------*/
-extern void TransferSamples(const void  *vsrc,       SampleFormat_t srctype, bool src_be,
-                            uint_t      src_channel, uint_t src_channels,
-                            void        *vdst,       SampleFormat_t dsttype, bool dst_be,
-                            uint_t      dst_channel, uint_t dst_channels,
-                            uint_t      nchannels = ~0,
-                            uint_t      nframes   = 1,
-                            Ditherer    *ditherer = NULL);
+extern void TransferSamples(const void *vsrc,       SampleFormat_t srctype, bool src_be,
+                            uint_t     src_channel, uint_t src_channels,
+                            void       *vdst,       SampleFormat_t dsttype, bool dst_be,
+                            uint_t     dst_channel, uint_t dst_channels,
+                            uint_t     nchannels = ~0,
+                            uint_t     nframes   = 1,
+                            Ditherer   *ditherer = NULL);
+
+/*--------------------------------------------------------------------------------*/
+/** Simple linear, contiguous transfer, (internal endianness -> internal endianness)
+ */
+/*--------------------------------------------------------------------------------*/
+extern void TransferSamplesLinear(const void *vsrc, SampleFormat_t srctype,
+                                  void       *vdst, SampleFormat_t dsttype,
+                                  uint_t     nsamples  = 1,
+                                  Ditherer   *ditherer = NULL);
 
 /*--------------------------------------------------------------------------------*/
 /** Memory to memory conversions/transfers
