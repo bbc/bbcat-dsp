@@ -48,6 +48,14 @@ src/SoundMixing.h                       |
 --------------------------------------------------------------------------------
 Building on Windows (Visual Studio)
 
+Follow the installation instructions for bbcat-base (https://github.com/bbcrd/bbcat-base)
+
+Use git-bash to change to the directory where the libraries are to be cloned to
+
+Clone source code, if necessary:
+git clone git@github.com:bbcrd/bbcat-dsp.git
+
+cd bbcat-dsp
 mkdir build
 cd build
 cmake -G "Visual Studio 14 2015 Win64" .. && cmake --build . --target INSTALL --config Release
