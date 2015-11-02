@@ -10,14 +10,12 @@ libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_LDFLAGS =	\
 
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_LIBADD =	\
 	$(BBCAT_BASE_LIBS)							\
-	$(BBCAT_GLOBAL_DSP_LIBS)					\
-	$(PTHREAD_LIBS)
+	$(BBCAT_GLOBAL_DSP_LIBS)
 
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_CPPFLAGS =	\
 	$(BBCAT_BASE_CFLAGS)							\
 	$(BBCAT_DSP_CFLAGS)								\
-	$(BBCAT_GLOBAL_DSP_CFLAGS)						\
-	$(PTHREAD_CFLAGS)
+	$(BBCAT_GLOBAL_DSP_CFLAGS)
 
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES =	\
 	FractionalSample.cpp							\

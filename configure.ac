@@ -79,44 +79,6 @@ fi
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 
-AC_ARG_WITH([thread],
-    AS_HELP_STRING([--with-thread=IMPL],[use threading library {auto,pthread,gthread,win32,none} [[default=auto]]]),
-    [],
-    [with_thread=auto])
-
-AC_MSG_CHECKING([threading implementation to use])
-if test "x${with_thread}" = "xauto" ; then
-  case $host_os in
-    mingw* | pw32*)
-      with_thread=win32
-      ;;
-    *)
-      with_thread=pthread
-      ;;
-  esac
-fi
-AC_MSG_RESULT([$with_thread])
-
-THREAD_IMPL=${with_thread}
-AC_SUBST(THREAD_IMPL)
-
-if test "x${with_thread}" = "xpthread" ; then
-  case "$host_os" in
-    *)
-      PTHREAD_CFLAGS=
-      PTHREAD_LIBS=-lpthread
-      ;;
-  esac
-  AC_SUBST(PTHREAD_CFLAGS)
-  AC_SUBST(PTHREAD_LIBS)
-fi
-
-if test "x${with_thread}" = "xgthread" ; then
-  PKG_CHECK_MODULES(GTHREAD, gthread-2.0, HAVE_GTHREAD=yes, HAVE_GTHREAD=no)
-  AC_SUBST(GTHREAD_LIBS)
-  AC_SUBST(GTHREAD_CFLAGS)
-fi
-
 BBCAT_GLOBAL_DSP_CFLAGS=""
 AC_SUBST(BBCAT_GLOBAL_DSP_CFLAGS)
 
