@@ -5,7 +5,7 @@
 #include <string.h>
 #include <math.h>
 
-#define DEBUG_LEVEL 1
+#define BBCDEBUG_LEVEL 1
 #include "SoundFormatRawConversions.h"
 
 BBC_AUDIOTOOLBOX_START

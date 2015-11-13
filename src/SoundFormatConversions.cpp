@@ -1,7 +1,7 @@
 
 #include <math.h>
 
-#define DEBUG_LEVEL 1
+#define BBCDEBUG_LEVEL 1
 #include "SoundFormatConversions.h"
 #include "SoundFormatRawConversions.h"
 
@@ -151,7 +151,7 @@ void TransferSamples(const void *vsrc,       SampleFormat_t srctype, bool src_be
     CONVERTSAMPLES fn = SoundFormatConversions[(uint_t)src_be][(uint_t)dst_be][srctype][dsttype];
     if (!fn)
     {
-      ERROR("Unknown copying routine for (%u/%u/%u/%u)", (uint_t)src_be, (uint_t)dst_be, srctype, dsttype);
+      BBCERROR("Unknown copying routine for (%u/%u/%u/%u)", (uint_t)src_be, (uint_t)dst_be, srctype, dsttype);
       return;
     }
 
@@ -173,7 +173,7 @@ void TransferSamplesLinear(const void *vsrc, SampleFormat_t srctype,
   CONVERTSAMPLES fn = SoundFormatConversions[(uint_t)MACHINE_IS_BIG_ENDIAN][(uint_t)MACHINE_IS_BIG_ENDIAN][srctype][dsttype];
   if (!fn)
   {
-    ERROR("Unknown copying routine for (%u/%u)", srctype, dsttype);
+    BBCERROR("Unknown copying routine for (%u/%u)", srctype, dsttype);
     return;
   }
 

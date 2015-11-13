@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#define DEBUG_LEVEL 2 
+#define BBCDEBUG_LEVEL 2 
 #include "FractionalSample.h"
 #include "SoundDelayBuffer.h"
 
@@ -83,10 +83,10 @@ uint_t SoundDelayBuffer::WriteSamples(const uint8_t *src, SampleFormat_t srcform
     uint_t srclen = GetBytesPerSample(srcformat);
     uint_t pos    = writepos;
 
-#if DEBUG_LEVEL >= 2
+#if BBCDEBUG_LEVEL >= 2
     if (srcformat != format)
     {
-      DEBUG("Warning: WriteSamples performing sample conversion (%u -> %u)", srcformat, format);
+      BBCDEBUG("Warning: WriteSamples performing sample conversion (%u -> %u)", srcformat, format);
     }
 #endif
 
@@ -177,10 +177,10 @@ Sample_t SoundDelayBuffer::ReadSample(uint_t channel, uint_t delay) const
 {
   Sample_t res = 0.0;
 
-#if DEBUG_LEVEL >= 2
+#if BBCDEBUG_LEVEL >= 2
   if (SampleFormatOf(res) != format)
   {
-    DEBUG("Warning: ReadSample performing sample conversion (%u -> %u)", format, SampleFormatOf(res));
+    BBCDEBUG("Warning: ReadSample performing sample conversion (%u -> %u)", format, SampleFormatOf(res));
   }
 #endif
 

@@ -1,7 +1,7 @@
 
 #include <math.h>
 
-#define DEBUG_LEVEL 2
+#define BBCDEBUG_LEVEL 2
 #include <bbcat-base/misc.h>
 
 #include "FractionalSample.h"
