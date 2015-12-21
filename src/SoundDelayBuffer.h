@@ -118,6 +118,7 @@ public:
    */
   /*--------------------------------------------------------------------------------*/
   virtual void SetSize(uint_t chans, uint_t length, SampleFormat_t type = SampleFormat_Double);
+  using SoundDelayBuffer::SetSize;
 
   virtual uint_t GetReadPosition()         const {return readpos;}
   virtual uint_t GetReadFramesAvailable()  const {return (writepos + buflen - readpos) % buflen;}
@@ -139,6 +140,7 @@ public:
    */
   /*--------------------------------------------------------------------------------*/
   virtual uint_t WriteSamples(const uint8_t  *src, SampleFormat_t srcformat, uint_t channel = 0, uint_t nchannels = ~0, uint_t nframes = 1);
+  using SoundDelayBuffer::WriteSamples;
 
   /*--------------------------------------------------------------------------------*/
   /** Increment write position by specified amount
@@ -163,6 +165,7 @@ public:
    */
   /*--------------------------------------------------------------------------------*/
   virtual uint_t ReadSamples(uint8_t  *dst, SampleFormat_t dstformat, uint_t delay, uint_t channel = 0, uint_t nchannels = ~0, uint_t nframes = 1);
+  using SoundDelayBuffer::ReadSamples;
 
   /*--------------------------------------------------------------------------------*/
   /** Increment read position by specified amount
