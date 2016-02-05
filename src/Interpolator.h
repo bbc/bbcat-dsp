@@ -52,7 +52,7 @@ public:
   /** Interpolate current value towards target at the specified rate
    */
   /*--------------------------------------------------------------------------------*/
-  Interpolator& operator += (float inc) {current = (target >= current) ? MIN(current + inc, target) : MAX(current - inc, target); return *this;}
+  Interpolator& operator += (float inc) {current = (target >= current) ? std::min(current + inc, target) : std::max(current - inc, target); return *this;}
 
   /*--------------------------------------------------------------------------------*/
   /** Return current value

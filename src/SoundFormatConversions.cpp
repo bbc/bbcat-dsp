@@ -115,11 +115,11 @@ void TransferSamples(const void *vsrc,       SampleFormat_t srctype, bool src_be
     sint_t        dstlen = GetBytesPerSample(dsttype); // (signed so that the direction of operation can be backwards as well as forwards)
 
     // restrict input data to sensible values
-    src_channel = MIN(src_channel, src_channels);
-    dst_channel = MIN(dst_channel, dst_channels);
+    src_channel = std::min(src_channel, src_channels);
+    dst_channel = std::min(dst_channel, dst_channels);
 
-    nchannels   = MIN(nchannels,   src_channels - src_channel);
-    nchannels   = MIN(nchannels,   dst_channels - dst_channel);
+    nchannels   = std::min(nchannels,   src_channels - src_channel);
+    nchannels   = std::min(nchannels,   dst_channels - dst_channel);
 
     // final sanity check
     if (!nchannels) return;

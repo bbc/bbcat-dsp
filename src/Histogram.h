@@ -41,7 +41,7 @@ public:
     histogram.resize(n);
     Reset();
   }
-  uint_t GetSize() const {return histogram.size();}
+  uint_t GetSize() const {return (uint_t)histogram.size();}
 
   /*--------------------------------------------------------------------------------*/
   /** Each index holds count and sum
@@ -103,7 +103,7 @@ public:
   uint_t CalcIndex(INDEXTYPE index) const
   {
     index = (INDEXTYPE(histogram.size()) * (index - min)) / range;
-    return (uint_t)LIMIT((sint_t)index, 0, (sint_t)(histogram.size() - 1));
+    return (uint_t)limited::limit((sint_t)index, 0, (sint_t)(histogram.size() - 1));
   }
 
   /*--------------------------------------------------------------------------------*/

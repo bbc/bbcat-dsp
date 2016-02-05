@@ -30,7 +30,7 @@ public:
   /** Return running average length
    */
   /*--------------------------------------------------------------------------------*/
-  uint_t GetLength() const {return buffer.size();}
+  uint_t GetLength() const {return (uint_t)buffer.size();}
 
   /*--------------------------------------------------------------------------------*/
   /** Return current position
@@ -57,7 +57,7 @@ public:
   void Reset()
   {
     // reset contents of buffer
-    if (buffer.size()) buffer.assign(buffer.size(), (ITEMTYPE)0);
+    if (buffer.size()) buffer.assign(buffer.size(), ITEMTYPE());
     pos = 0;
   }
 
@@ -75,7 +75,7 @@ public:
   }
 
   /*--------------------------------------------------------------------------------*/
-  /** Write item into buffer and update running average
+  /** Write items into buffer
    */
   /*--------------------------------------------------------------------------------*/
   void Write(const ITEMTYPE *src, uint_t count, uint_t stride = 1)
@@ -84,7 +84,7 @@ public:
     {
       while (count)
       {
-        uint_t i, n = MIN(count, buffer.size() - pos);
+        uint_t i, n = std::min(count, (uint_t)(buffer.size() - pos));
 
         if (stride == 1)
         {
@@ -106,6 +106,26 @@ public:
     }
   }
 
+  /*--------------------------------------------------------------------------------*/
+  /** Read item at current (or delayed) position
+   *
+   * @note delay must be <= buffer size
+   */
+  /*--------------------------------------------------------------------------------*/
+  const ITEMTYPE& Read(uint_t delay = 0) const
+  {
+    return buffer[GetDelayedPosition(delay)];
+  }
+
+  /*--------------------------------------------------------------------------------*/
+  /** Advance position by count
+   */
+  /*--------------------------------------------------------------------------------*/
+  void Advance(uint_t n = 1)
+  {
+    pos = (pos + n) % buffer.size();
+  }
+  
   /*--------------------------------------------------------------------------------*/
   /** Return buffer for specific position and the maximum number of items that can be read
    */

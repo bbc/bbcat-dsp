@@ -146,7 +146,7 @@ public:
   /** Increment write position by specified amount
    */
   /*--------------------------------------------------------------------------------*/
-  virtual void IncrementWritePosition(uint_t nframes = 1) {nframes = MIN(nframes, GetWriteFramesAvailable()); writepos = (writepos + nframes) % buflen;}
+  virtual void IncrementWritePosition(uint_t nframes = 1) {nframes = std::min(nframes, GetWriteFramesAvailable()); writepos = (writepos + nframes) % buflen;}
 
   /*--------------------------------------------------------------------------------*/
   /** Read samples from buffer from some time previous to the current READ position
@@ -171,7 +171,7 @@ public:
   /** Increment read position by specified amount
    */
   /*--------------------------------------------------------------------------------*/
-  virtual void IncrementReadPosition(uint_t nframes = 1) {nframes = MIN(nframes, GetReadFramesAvailable()); readpos = (readpos + nframes) % buflen;}
+  virtual void IncrementReadPosition(uint_t nframes = 1) {nframes = std::min(nframes, GetReadFramesAvailable()); readpos = (readpos + nframes) % buflen;}
 
 protected:
   uint_t readpos;

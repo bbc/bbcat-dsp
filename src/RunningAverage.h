@@ -39,7 +39,7 @@ public:
   /** Return running average length
    */
   /*--------------------------------------------------------------------------------*/
-  uint_t GetLength() const {return buffer.size();}
+  uint_t GetLength() const {return (uint_t)buffer.size();}
 
   /*--------------------------------------------------------------------------------*/
   /** Reset running average
@@ -79,7 +79,7 @@ public:
     {
       while (count)
       {
-        uint_t i, n = MIN(count, buffer.size() - pos);
+        uint_t i, n = std::min(count, buffer.size() - pos);
 
         for (i = 0; i < n; i++, src += stride)
         {

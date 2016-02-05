@@ -64,11 +64,11 @@ void MixSamples(const Sample_t *src,
       (mul != 0.0))
   {
     // restrict input data to sensible values
-    src_channel = MIN(src_channel, src_channels - 1);
-    dst_channel = MIN(dst_channel, dst_channels - 1);
+    src_channel = std::min(src_channel, src_channels - 1);
+    dst_channel = std::min(dst_channel, dst_channels - 1);
 
-    nchannels   = MIN(nchannels,   src_channels - src_channel);
-    nchannels   = MIN(nchannels,   dst_channels - dst_channel);
+    nchannels   = std::min(nchannels,   src_channels - src_channel);
+    nchannels   = std::min(nchannels,   dst_channels - dst_channel);
 
     // final sanity check
     if (!nchannels) return;
@@ -123,11 +123,11 @@ void MixSamples(const Sample_t *src,
       interp.NonZero())
   {
     // restrict input data to sensible values
-    src_channel = MIN(src_channel, src_channels);
-    dst_channel = MIN(dst_channel, dst_channels);
+    src_channel = std::min(src_channel, src_channels);
+    dst_channel = std::min(dst_channel, dst_channels);
 
-    nchannels   = MIN(nchannels,   src_channels - src_channel);
-    nchannels   = MIN(nchannels,   dst_channels - dst_channel);
+    nchannels   = std::min(nchannels,   src_channels - src_channel);
+    nchannels   = std::min(nchannels,   dst_channels - dst_channel);
 
     // final sanity check
     if (!nchannels) return;
