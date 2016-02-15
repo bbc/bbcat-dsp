@@ -1,5 +1,6 @@
 #sources
 set(_sources
+	BiQuad.cpp
 	FractionalSample.cpp
 	SoundDelayBuffer.cpp
 	SoundFormatConversions.cpp
@@ -10,6 +11,8 @@ set(_sources
 
 # public headers
 set(_headers
+	AllPassFilter.h
+	BiQuad.h
 	FractionalSample.h
 	Histogram.h
 	Interpolator.h

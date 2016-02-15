@@ -18,6 +18,7 @@ libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_CPPFLAGS =	\
 	$(BBCAT_GLOBAL_DSP_CFLAGS)
 
 libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES =	\
+	BiQuad.cpp										\
 	FractionalSample.cpp							\
 	SoundDelayBuffer.cpp							\
 	SoundFormatConversions.cpp						\
@@ -26,6 +27,8 @@ libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES =	\
 	version.cpp
 
 pkginclude_HEADERS =							\
+	AllPassFilter.h								\
+	BiQuad.h									\
 	FractionalSample.h							\
 	Histogram.h									\
 	Interpolator.h								\
