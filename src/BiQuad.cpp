@@ -396,7 +396,7 @@ void BiQuadCoeffs::Interpolate(double count)
 
 /*----------------------------------------------------------------------------------------------------*/
 
-BiQuad::BiQuad(const BiQuadCoeffs& _coeffs) : coeffs(_coeffs)
+BiQuad::BiQuad(const BiQuadCoeffs& _coeffs) : coeffs(&_coeffs)
 {
   memset(w, 0, sizeof(w));
 }

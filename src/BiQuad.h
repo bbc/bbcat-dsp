@@ -199,9 +199,9 @@ public:
   /*--------------------------------------------------------------------------------*/
   inline Sample_t Process(Sample_t x)
   {
-    Sample_t y = (Sample_t)(x * coeffs.current.num0 + w[0]);
-    w[0] = x * coeffs.current.num1 - y * coeffs.current.den1 + w[1];
-    w[1] = x * coeffs.current.num2 - y * coeffs.current.den2;
+    Sample_t y = (Sample_t)(x * coeffs->current.num0 + w[0]);
+    w[0] = x * coeffs->current.num1 - y * coeffs->current.den1 + w[1];
+    w[1] = x * coeffs->current.num2 - y * coeffs->current.den2;
     return y;
   }
 
@@ -236,7 +236,7 @@ public:
   static void Process(BiQuad *filters, const Sample_t *src, Sample_t *dst, uint_t nchannels, uint_t nsrcchannels, uint_t ndstchannels, uint_t nframes, BiQuadCoeffs& coeffs);
 
 protected:
-  const BiQuadCoeffs& coeffs;
+  const BiQuadCoeffs *coeffs;
   double w[2];
 };
 
