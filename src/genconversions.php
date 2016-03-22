@@ -67,7 +67,7 @@ if ($fp = fopen("SoundFormatRawConversions.cpp", "w")) {
 
   fprintf($fp, "\n");
 
-  fprintf($fp, "#define DEBUG_LEVEL 1\n");
+  fprintf($fp, "#define BBCDEBUG_LEVEL 1\n");
   fprintf($fp, "#include \"SoundFormatRawConversions.h\"\n");
 
   fprintf($fp, "\n");
@@ -137,7 +137,8 @@ if ($fp = fopen("SoundFormatRawConversions.cpp", "w")) {
               fprintf($fp, "  static const $dsttype factor = cast($dsttype, pow(2.0, -31.0));\n");
             }
             else if (($srctype[0] != 's') && ($dsttype[0] == 's')) {
-              fprintf($fp, "  static const $srctype factor = cast($srctype, pow(2.0, 31.0));\n");
+              // Use double here so that limiting is done using doubles (floats are precise enough)
+              fprintf($fp, "  static const double factor = pow(2.0, 31.0);\n");
             }
 
             fprintf($fp, "  " . str_pad($srctype,  9, ' ', STR_PAD_RIGHT) . "sval;\n");
@@ -260,7 +261,7 @@ if ($fp = fopen("SoundFormatRawConversions.cpp", "w")) {
             }
             else if (($srctype[0] != 's') && ($dsttype[0] == 's')) {
               fprintf($fp, "      // convert floating point sample to integer sample (scale and limit)\n");
-              fprintf($fp, "      dval = cast($dsttype, LIMIT(sval * factor, -2147483648.0, 2147483647.0));\n");
+              fprintf($fp, "      dval = cast($dsttype, limited::limit(sval * factor, -2147483648.0, 2147483647.0));\n");
               if ($allow_direct && ($dstsize == $typesize[$dsttype])) {
                 fprintf($fp, $testendian[$dst_be]);
                 fprintf($fp, "      // write integer sample directly\n");

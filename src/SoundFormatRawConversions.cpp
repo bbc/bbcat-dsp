@@ -667,7 +667,7 @@ static void __Convert_32bitLE_to_DoubleLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatLE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -698,7 +698,7 @@ static void __Convert_FloatLE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 16);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
       // write 16-bit integer sample directly
       mem(sint16_t, dst) = cast(sint16_t, dval >> 16);
@@ -717,7 +717,7 @@ static void __Convert_FloatLE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatLE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -748,7 +748,7 @@ static void __Convert_FloatLE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 8);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
       // write sample bytes to destination
       dst[2] = cast(uint8_t, dvp[0] >> 24);
       dst[1] = cast(uint8_t, dvp[0] >> 16);
@@ -763,7 +763,7 @@ static void __Convert_FloatLE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatLE_to_32bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -792,7 +792,7 @@ static void __Convert_FloatLE_to_32bitLE(const uint8_t *src, uint8_t *dst, uint_
       svp[0] = (cast(uint32_t, src[3]) << 24) + (cast(uint32_t, src[2]) << 16) + (cast(uint32_t, src[1]) << 8) + (cast(uint32_t, src[0]));
 #endif
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
       // write integer sample directly
       mem(sint32_t, dst) = dval;
@@ -870,7 +870,7 @@ static void __Convert_FloatLE_to_DoubleLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleLE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -920,7 +920,7 @@ static void __Convert_DoubleLE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleLE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -966,7 +966,7 @@ static void __Convert_DoubleLE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleLE_to_32bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -1795,7 +1795,7 @@ static void __Convert_32bitLE_to_DoubleBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatLE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -1826,7 +1826,7 @@ static void __Convert_FloatLE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 16);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
       // write 16-bit integer sample directly
       mem(sint16_t, dst) = cast(sint16_t, dval >> 16);
@@ -1845,7 +1845,7 @@ static void __Convert_FloatLE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatLE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -1876,7 +1876,7 @@ static void __Convert_FloatLE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 8);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
       // write sample bytes to destination
       dst[0] = cast(uint8_t, dvp[0] >> 24);
       dst[1] = cast(uint8_t, dvp[0] >> 16);
@@ -1891,7 +1891,7 @@ static void __Convert_FloatLE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatLE_to_32bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -1920,7 +1920,7 @@ static void __Convert_FloatLE_to_32bitBE(const uint8_t *src, uint8_t *dst, uint_
       svp[0] = (cast(uint32_t, src[3]) << 24) + (cast(uint32_t, src[2]) << 16) + (cast(uint32_t, src[1]) << 8) + (cast(uint32_t, src[0]));
 #endif
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
       // write integer sample directly
       mem(sint32_t, dst) = dval;
@@ -2045,7 +2045,7 @@ static void __Convert_FloatLE_to_DoubleBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleLE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -2095,7 +2095,7 @@ static void __Convert_DoubleLE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleLE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -2141,7 +2141,7 @@ static void __Convert_DoubleLE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleLE_to_32bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -3021,7 +3021,7 @@ static void __Convert_32bitBE_to_DoubleLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatBE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -3052,7 +3052,7 @@ static void __Convert_FloatBE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 16);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
       // write 16-bit integer sample directly
       mem(sint16_t, dst) = cast(sint16_t, dval >> 16);
@@ -3071,7 +3071,7 @@ static void __Convert_FloatBE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatBE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -3102,7 +3102,7 @@ static void __Convert_FloatBE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 8);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
       // write sample bytes to destination
       dst[2] = cast(uint8_t, dvp[0] >> 24);
       dst[1] = cast(uint8_t, dvp[0] >> 16);
@@ -3117,7 +3117,7 @@ static void __Convert_FloatBE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatBE_to_32bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -3146,7 +3146,7 @@ static void __Convert_FloatBE_to_32bitLE(const uint8_t *src, uint8_t *dst, uint_
       svp[0] = (cast(uint32_t, src[0]) << 24) + (cast(uint32_t, src[1]) << 16) + (cast(uint32_t, src[2]) << 8) + (cast(uint32_t, src[3]));
 #endif
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
       // write integer sample directly
       mem(sint32_t, dst) = dval;
@@ -3271,7 +3271,7 @@ static void __Convert_FloatBE_to_DoubleLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleBE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -3321,7 +3321,7 @@ static void __Convert_DoubleBE_to_16bitLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleBE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -3367,7 +3367,7 @@ static void __Convert_DoubleBE_to_24bitLE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleBE_to_32bitLE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -4119,7 +4119,7 @@ static void __Convert_32bitBE_to_DoubleBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatBE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -4150,7 +4150,7 @@ static void __Convert_FloatBE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 16);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
       // write 16-bit integer sample directly
       mem(sint16_t, dst) = cast(sint16_t, dval >> 16);
@@ -4169,7 +4169,7 @@ static void __Convert_FloatBE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatBE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -4200,7 +4200,7 @@ static void __Convert_FloatBE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_
       // apply dither
       if (ditherer) ditherer->Dither(i, sval, 8);
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
       // write sample bytes to destination
       dst[0] = cast(uint8_t, dvp[0] >> 24);
       dst[1] = cast(uint8_t, dvp[0] >> 16);
@@ -4215,7 +4215,7 @@ static void __Convert_FloatBE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_
 /*--------------------------------------------------------------------------------*/
 static void __Convert_FloatBE_to_32bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const float factor = cast(float, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   float    sval;
   sint32_t dval;
   uint32_t *svp = (uint32_t *)&sval;
@@ -4244,7 +4244,7 @@ static void __Convert_FloatBE_to_32bitBE(const uint8_t *src, uint8_t *dst, uint_
       svp[0] = (cast(uint32_t, src[0]) << 24) + (cast(uint32_t, src[1]) << 16) + (cast(uint32_t, src[2]) << 8) + (cast(uint32_t, src[3]));
 #endif
       // convert floating point sample to integer sample (scale and limit)
-      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.f, 2147483647.f));
+      dval = cast(sint32_t, limited::limit(sval * factor, -2147483648.0, 2147483647.0));
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
       // write integer sample directly
       mem(sint32_t, dst) = dval;
@@ -4322,7 +4322,7 @@ static void __Convert_FloatBE_to_DoubleBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleBE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -4372,7 +4372,7 @@ static void __Convert_DoubleBE_to_16bitBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleBE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
@@ -4418,7 +4418,7 @@ static void __Convert_DoubleBE_to_24bitBE(const uint8_t *src, uint8_t *dst, uint
 /*--------------------------------------------------------------------------------*/
 static void __Convert_DoubleBE_to_32bitBE(const uint8_t *src, uint8_t *dst, uint_t nchannels, uint_t nframes, sint_t srcflen, sint_t dstflen, Ditherer *ditherer)
 {
-  static const double factor = cast(double, pow(2.0, 31.0));
+  static const double factor = pow(2.0, 31.0);
   double   sval;
   sint32_t dval;
   uint64_t *svp = (uint64_t *)&sval;
