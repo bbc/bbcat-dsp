@@ -6,8 +6,8 @@ toolsdir=${exec_prefix}/bin
 
 
 Name: bbcat-dsp-@BBCAT_DSP_MAJORMINOR@
-Description: Diginal signal processing library
+Description: Digital Signal Processing library
 Requires.private: @BBCAT_DSP_PKG_DEPS@
 Version: @VERSION@
-Libs: -L${libdir} -lbbcat-dsp-@BBCAT_DSP_MAJORMINOR@
+Libs: -L${libdir} -lbbcat-dsp-@BBCAT_DSP_MAJORMINOR@ @BBCAT_GLOBAL_DSP_LIBS@
 Cflags: -I${includedir} @BBCAT_GLOBAL_DSP_CFLAGS@

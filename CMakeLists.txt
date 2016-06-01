@@ -1,5 +1,5 @@
 # Arbitrarily set minimum version.
-# This specific version is used to avoid complaints about the 
+# This specific version is used to avoid complaints about the
 # cygwin platform not defining WIN32 anymore.
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8.12.2)
 
@@ -9,29 +9,30 @@ PROJECT( bbcat-dsp C CXX )
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
 set(PROJECT_VERSION_RELEASE 2)
-set(PROJECT_VERSION_BUILD 1)
+set(PROJECT_VERSION_BUILD 2)
 
-#include all the parts that are consistent across all libraries
-include(CMakeLists-bbcat.txt)
+set(PROJECT_DESCRIPTION "Digital Signal Processing library")
+
+# use bbcat-common as installed by bbcat-base
+set(BBCAT_COMMON_DIR ${CMAKE_INSTALL_PREFIX}/share/bbcat-common)
+
+#include all the parts that are consistent across all projects
+include(${BBCAT_COMMON_DIR}/CMakeProject.txt)
 
 find_package(bbcat-base REQUIRED)
-include_directories(${BBCAT_BASE_INCLUDE_DIRS})
+bbcat_add_library(BBCAT_BASE)
 
-# set include directories for storing in .cmake file
-set(GLOBAL_INCLUDE_DIRS
-	${BBCAT_BASE_INCLUDE_DIRS}
-	${INSTALL_INCLUDE_DIR})
+# find ENABLE_GPL option in flags
+is_feature_enabled(ENABLE_GPL "GPL support")
 
-# set library directories for storing in .cmake file
-set(GLOBAL_LIB_DIRS
-	${BBCAT_BASE_LIB_DIRS}
-	${INSTALL_LIB_DIR})
+# set flags for compiling
+add_definitions(${GLOBAL_FLAGS})
+
+# set include directories for compiling
+include_directories(${GLOBAL_INCLUDE_DIRS})
 
 # set library directories for linking
 link_directories(${GLOBAL_LIB_DIRS})
-
-set(GLOBAL_FLAGS
-	${BBCAT_BASE_FLAGS})
 
 ADD_DEFINITIONS(${GLOBAL_FLAGS})
 
@@ -44,3 +45,6 @@ ADD_SUBDIRECTORY( src )
 install(DIRECTORY "share/"
 		DESTINATION "${INSTALL_SHARE_DIR}"
 		PATTERN "share/*")
+
+# generate package config file
+bbcat_generate_pkg_config()

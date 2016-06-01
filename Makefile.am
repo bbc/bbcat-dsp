@@ -21,7 +21,7 @@ bbcat-dsp-$(BBCAT_DSP_MAJORMINOR)-uninstalled.pc: bbcat-dsp-uninstalled.pc
 
 BUILT_SOURCES = bbcat-dsp-$(BBCAT_DSP_MAJORMINOR)-uninstalled.pc gitbranch.txt
 
-CLEANFILES = bbcat-dsp-$(BBCAT_DSP_MAJORMINOR).pc bbcat-dsp-$(BBCAT_DSP_MAJORMINOR)-uninstalled.pc src/version.h src/version.cpp gitbranch.txt .branch
+CLEANFILES = bbcat-dsp-$(BBCAT_DSP_MAJORMINOR).pc bbcat-dsp-$(BBCAT_DSP_MAJORMINOR)-uninstalled.pc src/register.cpp gitbranch.txt .branch
 
 ACLOCAL_FLAGS = -I m4
 

@@ -4,12 +4,14 @@ bbcat-dsp is a general purpose DSP library which forms the basis of the Audio To
 
 Dependencies
 
-bbcat-base - https://github.com/bbcrd/bbcat-base.git
+bbcat-base - git@git0.rd.bbc.co.uk:aplibs/bbcat-base.git
+jsoncpp - https://github.com/open-source-parsers/jsoncpp
 
 Files
 
 autogen.sh - simple autotools script
 configure.ac - configure configuration for autotools
+CMakeLists.txt - CMake configuration
 COPYING - information on copying this library
 debian/ - Debian control and version information
 doxygen.am - Doxygen automake file
@@ -18,6 +20,32 @@ m4 - folder for autotools
 Makefile.am - makefile for automake
 README - this file
 src/ - source folder containing C/C++ source and header files
+
+src/2DConvolution.h                     | 2D convolution template
+
+src/BiQuad.cpp                          | Biquad filter implementation
+src/BiQuad.h                            |
+
+src/BiQuadBlock.cpp                     | Block processing using biquad filters
+src/BiQuadBlock.h                       |
+
+src/BlockConvolver.cpp                  | Single-channel partitioned convolution
+src/BlockConvolver.h                    |
+
+src/CMakeLists.txt						| CMake configuration for source files
+
+src/Convolver.cpp                       | Multi-channel parallelized convolution using BlockConvolver
+src/Convolver.h                         |
+
+src/FFT.cpp                             | FFT abstraction base
+src/FFT.h                               |
+
+src/FFT_FFTW.cpp                        | FFTW implementation
+
+src/FFT_kiss.cpp                        | KISS FFT implementation
+
+src/FilterManager.cpp                   | Manager class for biquad filters
+src/FilterManager.h                     |
 
 src/FractionalSample.cpp                | Fractional delay line for floating point samples
 src/FractionalSample.h
@@ -28,10 +56,20 @@ src/Histogram.h							| Histogram template class
 
 src/Interpolator.h                      | Simple interpolation class
 
+src/ITU1770MultiChannelLoudness.cpp     | ITU 1770 loudness calculator
+src/ITU1770MultiChannelLoudness.h       |
+
+src/simd_utils.cpp                      | SIMD utils for FFT and convolution
+src/simd_utils.h                        |
+
 src/Makefile.am                         | Makefile for automake
 
-src/RingBuffer.h						| Simple ring buffer template class
-src/RunningAverage.h					| Simple running average template class
+src/RingBuffer.h                        | Ring buffer template
+
+src/RunningAverage.h                    | Running average template
+
+src/SOFA.cpp                            | SOFA file support via the netcdf-bbc libraries
+src/SOFA.h                              |
 
 src/SoundDelayBuffer.cpp                | Delay/ring audio buffer 
 src/SoundDelayBuffer.h                  |
@@ -44,6 +82,42 @@ src/SoundFormatRawConversions.h         | (.h file not auto-generated)
 
 src/SoundMixing.cpp                     | Sound summing functions
 src/SoundMixing.h                       |
+
+src/register.cpp						| Registration function (see below)
+
+--------------------------------------------------------------------------------
+Initialising the Library (IMPORTANT!)
+
+Compilers are clever and try to remove unused code whilst linking applications.
+However, sometimes they are too clever and remove some code that *appears* not
+to be used but is.  Uses of the SelfRegisteringParametricObject class may
+particularly suffer from this as it appears as though nothing is using the
+code.
+
+To stop this, each library includes a register.cpp file which explicitly calls a
+set of initilisation and registration functions. This file also calls the
+registration functions of any libraries it is dependant upon.
+
+For this to work, any application *must* call the registration function of most
+dependant library it uses.
+
+For example, for an application using only this library:
+BBC_AUDIOTOOLBOX_START
+extern bool bbcat_register_bbcat_dsp();
+BBC_AUDIOTOOLBOX_END
+
+using namespace bbcat;
+
+int main(int argc, char *argv[])
+{
+  // ensure libraries are set up
+  bbcat_register_bbcat_dsp();
+}
+
+register.cpp is included in repo but will be updated by the script
+bbcat-common/findregisterfunctions.sh if autotools is used.  The CMake process
+is also capable of autogenerating this file if the original in the source
+directory does not exist.
 
 --------------------------------------------------------------------------------
 Building on Windows (Visual Studio)

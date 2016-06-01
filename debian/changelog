@@ -1,8 +1,18 @@
+bbcat-dsp (0.1.2.2) quantal; urgency=low
+
+  * Updated to use improved CMake build mechanism
+  * Added explicit library registration function (see README)
+  * Fixed potential incorrect limiting of floating point samples when converting to integer
+  * Added BiQuad and AllPassFilter classes
+  * Updated README file
+
+ -- Richard Day <richard.day@bbc.co.uk>  Tue, 26 Apr 2016 17:00:00 +0100
+
 bbcat-dsp (0.1.2.1) quantal; urgency=low
 
   * Changed SoundDelayBuffer to use 'using' keyword.
 
-  -- Richard Day <richard.day@bbc.co.uk>  Mon, 21 Dec 2015 14:00:00 +0000
+ -- Richard Day <richard.day@bbc.co.uk>  Mon, 21 Dec 2015 14:00:00 +0000
 
 bbcat-dsp (0.1.2.0) quantal; urgency=low
 

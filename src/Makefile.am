@@ -17,14 +17,13 @@ libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_CPPFLAGS =	\
 	$(BBCAT_DSP_CFLAGS)								\
 	$(BBCAT_GLOBAL_DSP_CFLAGS)
 
-libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES =	\
-	BiQuad.cpp										\
-	FractionalSample.cpp							\
-	SoundDelayBuffer.cpp							\
-	SoundFormatConversions.cpp						\
-	SoundFormatRawConversions.cpp					\
-	SoundMixing.cpp									\
-	version.cpp
+libbbcat_dsp_sources =							\
+	BiQuad.cpp									\
+	FractionalSample.cpp						\
+	SoundDelayBuffer.cpp						\
+	SoundFormatConversions.cpp					\
+	SoundFormatRawConversions.cpp				\
+	SoundMixing.cpp
 
 pkginclude_HEADERS =							\
 	AllPassFilter.h								\
@@ -32,13 +31,13 @@ pkginclude_HEADERS =							\
 	FractionalSample.h							\
 	Histogram.h									\
 	Interpolator.h								\
+	MultilayerBuffer.h							\
 	RingBuffer.h								\
 	RunningAverage.h							\
 	SoundDelayBuffer.h							\
 	SoundFormatConversions.h					\
 	SoundFormatRawConversions.h					\
-	SoundMixing.h								\
-	version.h
+	SoundMixing.h
 
 noinst_HEADERS =
 
@@ -46,14 +45,10 @@ nodist_pkginclude_HEADERS =
 
 distcleanfiles = 
 
-CLEANFILES = version.h version.cpp
+#CLEANFILES = register.cpp
 
-version.h: Makefile ../config.h ../gitbranch.txt
-	echo "{\"@PACKAGE@\", \"@VERSION@-`cat ../gitbranch.txt`\"}," >version.h
+# register.cpp is included in repo but will be updated by the script below 
+register.cpp: Makefile ../config.h ../gitbranch.txt $(libbbcat_dsp_sources)
+	sh $(prefix)/share/bbcat-common/findregisterfunctions.sh "bbcat-dsp" "@VERSION@-`cat ../gitbranch.txt`" "$(libbbcat_dsp_sources)" "bbcat_base" >$@
 
-version.cpp: Makefile ../config.h ../gitbranch.txt
-	echo "/* Auto-generated: DO NOT EDIT! */" >version.cpp
-	echo "#include <bbcat-base/LoadedVersions.h>" >>version.cpp
-	echo "BBC_AUDIOTOOLBOX_START" >>version.cpp
-	echo "volatile uint_t __keep_@PACKAGE@_version = bbcat::LoadedVersions::Get().Register(\"@PACKAGE@\", \"@VERSION@-`cat ../gitbranch.txt`\");" >>version.cpp
-	echo "BBC_AUDIOTOOLBOX_END" >>version.cpp
+libbbcat_dsp_@BBCAT_DSP_MAJORMINOR@_la_SOURCES = $(libbbcat_dsp_sources) register.cpp

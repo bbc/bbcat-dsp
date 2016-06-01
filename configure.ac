@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([BBCAT_DSP],[0.1.2.1])
+AC_INIT([BBCAT_DSP],[0.1.2.2])
 
 AS_NANO(BBCAT_DSP_CVS=no,BBCAT_DSP_CVS=yes)
 
@@ -37,11 +37,13 @@ DX_DOXYGEN_FEATURE(ON)
 DX_INIT_DOXYGEN(bbcat-dsp, doxygen.cfg)
 
 dnl bbcat-base is required
-BBCAT_BASE_VER="0.1.2.1"
+BBCAT_BASE_VER="0.1.2.0"
 PKG_CHECK_MODULES(BBCAT_BASE, bbcat-base-0.1 >= $BBCAT_BASE_VER, HAVE_BBCAT_BASE=yes, HAVE_BBCAT_BASE=no)
 if test "x${HAVE_BBCAT_BASE}" != xyes ; then
   AC_MSG_ERROR([bbcat-base-0.1 >= $BBCAT_BASE_VER is required])
 fi
+
+BBCAT_GLOBAL_DSP_CFLAGS=""
 
 # Check for GPL support
 # only need ENABLE_GPL for inclusion of extra files, C flags are handled automatically!
@@ -79,8 +81,8 @@ fi
 AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 
-BBCAT_GLOBAL_DSP_CFLAGS=""
 AC_SUBST(BBCAT_GLOBAL_DSP_CFLAGS)
+AC_SUBST(BBCAT_GLOBAL_DSP_LIBS)
 
 AC_APPEND_SUPPORTED_CFLAGS(BBCAT_DSP_CFLAGS, [-Wall])
 AC_APPEND_SUPPORTED_CFLAGS(BBCAT_DSP_CFLAGS, [-Werror])

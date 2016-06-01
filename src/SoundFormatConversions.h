@@ -87,6 +87,28 @@ extern uint8_t GetBitsPerSample(SampleFormat_t type);
 extern uint8_t GetBytesPerSample(SampleFormat_t type);
 
 /*--------------------------------------------------------------------------------*/
+/** Perform sanity checks / adjustments for source/destination sample blocks
+ *
+ * @param src_channel starting channel to read from
+ * @param src_channels total number of source channels in buffer
+ * @param dst_channel starting channel to write to
+ * @param dst_channels total number of destination channels in buffer
+ * @param nchannels number of channels to transfer/convert
+ * @param nframes number of frames to transfer/convert
+ * @param allowsinglechannel true to allow many contiguous frames to be changed to a single frame of many channels
+ *
+ * @return true if resultant transfer is non-empty and valid
+ *
+ * @note allowsinglechannel should be FALSE when performing operations on a per-frame basis (like interpolation)
+ */
+/*--------------------------------------------------------------------------------*/
+extern bool BlockTransferSanityChecks(uint_t& src_channel, uint_t& src_channels,
+                                      uint_t& dst_channel, uint_t& dst_channels,
+                                      uint_t& nchannels,
+                                      uint_t& nframes,
+                                      bool    allowsinglechannel = true);
+  
+/*--------------------------------------------------------------------------------*/
 /** Move/convert samples from one format to another and from one buffer to another
  *
  * @param vsrc pointer to source buffer (void * for easy casting) 
@@ -165,22 +187,15 @@ extern void TransferSamplesLinear(const void *vsrc, SampleFormat_t srctype,
  * ASSUMES endianness of data is the same as the machine
  */
 /*--------------------------------------------------------------------------------*/
-extern void TransferSamples(const sint16_t *src, uint_t src_channel, uint_t src_channels, sint16_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const sint16_t *src, uint_t src_channel, uint_t src_channels, sint32_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const sint16_t *src, uint_t src_channel, uint_t src_channels, float *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const sint16_t *src, uint_t src_channel, uint_t src_channels, double *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const sint32_t *src, uint_t src_channel, uint_t src_channels, sint16_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const sint32_t *src, uint_t src_channel, uint_t src_channels, sint32_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const sint32_t *src, uint_t src_channel, uint_t src_channels, float *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const sint32_t *src, uint_t src_channel, uint_t src_channels, double *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const float *src, uint_t src_channel, uint_t src_channels, sint16_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const float *src, uint_t src_channel, uint_t src_channels, sint32_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const float *src, uint_t src_channel, uint_t src_channels, float *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const float *src, uint_t src_channel, uint_t src_channels, double *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const double *src, uint_t src_channel, uint_t src_channels, sint16_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const double *src, uint_t src_channel, uint_t src_channels, sint32_t *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const double *src, uint_t src_channel, uint_t src_channels, float *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
-extern void TransferSamples(const double *src, uint_t src_channel, uint_t src_channels, double *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL);
+template<typename T1,typename T2>
+void TransferSamples(const T1 *src, uint_t src_channel, uint_t src_channels, T2 *dst, uint_t dst_channel, uint_t dst_channels, uint_t nchannels = ~0, uint_t nframes = 1, Ditherer *ditherer = NULL)
+{
+  TransferSamples((const void *)src, SampleFormatOf(*src), MACHINE_IS_BIG_ENDIAN, src_channel, src_channels,
+                  (void *)dst,       SampleFormatOf(*dst), MACHINE_IS_BIG_ENDIAN, dst_channel, dst_channels,
+                  nchannels,
+                  nframes,
+                  ditherer);
+}
 
 BBC_AUDIOTOOLBOX_END
 

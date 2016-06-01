@@ -1,31 +1,33 @@
 #sources
 set(_sources
-	BiQuad.cpp
-	FractionalSample.cpp
+    BiQuad.cpp
 	SoundDelayBuffer.cpp
 	SoundFormatConversions.cpp
 	SoundFormatRawConversions.cpp
 	SoundMixing.cpp
-	${CMAKE_CURRENT_BINARY_DIR}/version.cpp
 )
 
 # public headers
 set(_headers
 	AllPassFilter.h
-	BiQuad.h
+    BiQuad.h
 	FractionalSample.h
 	Histogram.h
 	Interpolator.h
+	MultilayerBuffer.h
 	RingBuffer.h
 	RunningAverage.h
 	SoundDelayBuffer.h
 	SoundFormatConversions.h
 	SoundFormatRawConversions.h
 	SoundMixing.h
-	${CMAKE_CURRENT_BINARY_DIR}/version.h
 )
 
-#include all the parts that are consistent across all libraries
-include(CMakeLists-src.txt)
+
+# auto-generate register.cpp
+bbcat_generate_register_cpp(DEPENDENCIES "bbcat_base")
+
+#include all the parts that are consistent across all projects
+include(${BBCAT_COMMON_DIR}/CMakeLibrary.txt)
 
 TARGET_LINK_LIBRARIES(bbcat-dsp bbcat-base)

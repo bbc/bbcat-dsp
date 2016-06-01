@@ -1,10 +1,10 @@
 #ifndef __SOUND_MIXING__
 #define __SOUND_MIXING__
 
+#include "SoundFormatConversions.h"
 #include "Interpolator.h"
 
 BBC_AUDIOTOOLBOX_START
-
 /*--------------------------------------------------------------------------------*/
 /** Mix source samples to destination samples (like TransferSamples() but adding instead of over-writing)
  *
@@ -52,13 +52,33 @@ BBC_AUDIOTOOLBOX_START
  *   0 <  nchannels   <= dst_channels
  */
 /*--------------------------------------------------------------------------------*/
-extern void MixSamples(const Sample_t *src,
-                       uint_t src_channel, uint_t src_channels,
-                       Sample_t *dst,
-                       uint_t dst_channel, uint_t dst_channels,
-                       uint_t nchannels = ~0,
-                       uint_t nframes = 1,
-                       Sample_t mul = 1.0);
+template<typename T>
+void MixSamples(const T *src,
+                uint_t src_channel, uint_t src_channels,
+                T      *dst,
+                uint_t dst_channel, uint_t dst_channels,
+                uint_t nchannels,
+                uint_t nframes,
+                T      mul = T(1))
+{
+  // sanity checks
+  if (BlockTransferSanityChecks(src_channel, src_channels,
+                                dst_channel, dst_channels,
+                                nchannels,
+                                nframes) &&
+      (mul != T()))
+  {
+    // move to desired offsets (starting channel)
+    src += src_channel;
+    dst += dst_channel;
+
+    uint_t i, j;
+    for (i = 0; i < nframes; i++, src += src_channels, dst += dst_channels)
+    {
+      for (j = 0; j < nchannels; j++) dst[j] += mul * src[j];
+    }
+  }
+}
 
 /*--------------------------------------------------------------------------------*/
 /** Mix source samples to destination samples (like TransferSamples() but adding instead of over-writing) with level changing
