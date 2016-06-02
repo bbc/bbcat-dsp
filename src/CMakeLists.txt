@@ -21,6 +21,7 @@ set(_headers
 	SoundFormatConversions.h
 	SoundFormatRawConversions.h
 	SoundMixing.h
+	register.h
 )
 
 
