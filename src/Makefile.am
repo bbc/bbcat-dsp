@@ -37,7 +37,8 @@ pkginclude_HEADERS =							\
 	SoundDelayBuffer.h							\
 	SoundFormatConversions.h					\
 	SoundFormatRawConversions.h					\
-	SoundMixing.h
+	SoundMixing.h								\
+	register.h
 
 noinst_HEADERS =
 
